@@ -1,7 +1,5 @@
+# -*- coding: utf-8 -*-
 # = viewの自動切り替え
-#
-# Rails 2.1.0 対応 http://d.hatena.ne.jp/kusakari/20080620/1213931903
-# thanks to id:kusakari
 #
 #:stopdoc:
 # helperを追加
@@ -26,29 +24,38 @@ module ActionView
     alias find_template_without_jpmobile find_template #:nodoc:
     alias initialize_without_jpmobile initialize #:nodoc:
 
-    attr_accessor :controller
+    attr_accessor :controller, :mailer
 
     def initialize(*args)
-      if args.first.kind_of?(ActionController::Base)
+      case args.first
+      when ActionController::Base
         @controller = args.shift
+      when ActionMailer::Base
+        @mailer     = args.shift
       end
+
       initialize_without_jpmobile(*args)
     end
 
     # hook ActionView::PathSet#find_template
     def find_template(original_template_path, format = nil, html_fallback = true) #:nodoc:
-      if controller and controller.kind_of?(ActionController::Base) and controller.request.mobile?
-        return original_template_path if original_template_path.respond_to?(:render)
-        template_path = original_template_path.sub(/^\//, '')
+      return original_template_path if original_template_path.respond_to?(:render)
+      template_path = original_template_path.sub(/^\//, '')
 
-        template_candidates = mobile_template_candidates(controller)
-        format_postfix      = format ? ".#{format}" : ""
+      template_candidates = if controller.kind_of?(ActionController::Base)
+                              mobile_template_candidates(controller)
+                            elsif mailer.kind_of?(ActionMailer::Base)
+                              mobile_mail_template_candidates(mailer)
+                            else
+                              []
+                            end
 
-        each do |load_path|
-          template_candidates.each do |template_postfix|
-            if template = load_path["#{template_path}_#{template_postfix}#{format_postfix}"]
-              return template
-            end
+      format_postfix      = format ? ".#{format}" : ""
+
+      each do |load_path|
+        template_candidates.each do |template_postfix|
+          if template = load_path["#{template_path}_#{template_postfix}#{format_postfix}"]
+            return template
           end
         end
       end
@@ -59,17 +66,36 @@ module ActionView
     # collect cadidates of mobile_template
     def mobile_template_candidates(controller)
       candidates = []
+
+      return candidates unless controller.request.mobile?
+
       c = controller.request.mobile.class
       while c != Jpmobile::Mobile::AbstractMobile
-        candidates << "mobile_"+c.to_s.split(/::/).last.downcase
+        candidates << "mobile_" + c.to_s.split(/::/).last.downcase
         c = c.superclass
       end
       candidates << "mobile"
+    end
+
+    # collect candidates of mobile mail templates
+    def mobile_mail_template_candidates(mailer)
+      candidates = []
+
+      # 複数アドレスの場合は選択しない
+      if mailer.recipients.is_a?(String)
+        if c = Jpmobile::Email.detect(mailer.recipients) and c != Jpmobile::Mobile::AbstractMobile
+          candidates << "mobile_" + c.to_s.split(/::/).last.downcase
+          candidates << "mobile"
+        end
+      end
+
+      candidates
     end
   end
 
   class Base #:nodoc:
     delegate :default_url_options, :to => :controller unless respond_to?(:default_url_options)
+    alias render_without_jpmobile render
 
     # nothing to do
     def view_paths=(paths)
@@ -77,7 +103,8 @@ module ActionView
     end
 
     def self.process_view_paths(value, controller = nil)
-      if controller && controller.is_a?(ActionController::Base)
+      case controller
+      when ActionController::Base, ActionMailer::Base
         ActionView::PathSet.new(controller, Array(value))
       else
         ActionView::PathSet.new(Array(value))
