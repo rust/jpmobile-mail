@@ -70,10 +70,10 @@ module ActionMailer
         @mail.subject = Jpmobile::Emoticon.unicodecr_to_external(@mail.subject, table, to_sjis)
         @mail.body = Jpmobile::Emoticon.unicodecr_to_external(@mail.body, table, to_sjis)
       when Jpmobile::Mobile::Softbank
-        # # shift_jis に変換
-        # @mail.charset = "utf-8"
-        # @mail.subject = NKF.nkf("-sWx", @mail.subject)
-        # @mail.body = NKF.nkf("-sWx", @mail.quoted_body)
+        # shift_jis に変換
+        @mail.charset = "shift_jis"
+        @mail.subject = NKF.nkf("-sWx", @mail.subject)
+        @mail.body = NKF.nkf("-sWx", @mail.quoted_body)
 
         table = Jpmobile::Emoticon::CONVERSION_TABLE_TO_SOFTBANK
         to_sjis = false

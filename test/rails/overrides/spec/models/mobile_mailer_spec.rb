@@ -84,15 +84,14 @@ describe MobileMailer do
       @to = "softbank@softbank.ne.jp"
     end
 
-    it "subject が JIS になること" do
+    it "subject が Shift_JIS になること" do
       mail = MobileMailer.deliver_message(@to, @subject, @text)
 
       emails = ActionMailer::Base.deliveries
       emails.size.should == 1
       email = emails.first
-
       email.body.should match(/For softbank/)
-      NKF.nkf('-Jw', email.subject).should == @subject
+      email.subject.should == NKF.nkf('-sW', @subject)
     end
 
     it "数値参照が絵文字に変換されること" do
@@ -104,10 +103,9 @@ describe MobileMailer do
       emails.size.should == 1
       email = emails.first
 
-p email.subject.unpack("H*")
-p (@subject + ["e03c"].pack("H*")).unpack("H*")
       email.body.should match(/For softbank/)
-      email.subject.should == NKF.nkf("-sWx", @subject) + ["e03c"].pack("H*")
+
+      email.subject.should == NKF.nkf("-sWx", @subject) + "$G\\"
     end
   end
 
@@ -135,9 +133,8 @@ p (@subject + ["e03c"].pack("H*")).unpack("H*")
       emails = ActionMailer::Base.deliveries
       emails.size.should == 1
       email = emails.first
-
       email.body.should match(/For vodafone/)
-      NKF.nkf("-Jw", email.subject).should == @subject + "〓"
+      email.subject.should == NKF.nkf("-jW", @subject) + "〓"
     end
   end
 end

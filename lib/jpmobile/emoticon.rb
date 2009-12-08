@@ -91,6 +91,9 @@ module Jpmobile
             [sjis].pack('n')
           elsif webcode = SOFTBANK_UNICODE_TO_WEBCODE[converted-0x1000]
             "\x1b\x24#{webcode}\x0f"
+          elsif converted == 0x3013
+            # ゲタ「〓」の場合はそれに変換する
+            [converted].pack('U')
           else
             # キャリア変換テーブルに指定されていたUnicodeに対応する
             # 携帯側エンコーディングが見つからない(変換テーブルの不備の可能性あり)。
