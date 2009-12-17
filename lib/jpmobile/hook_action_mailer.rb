@@ -105,42 +105,14 @@ module ActionMailer
           # Shift_JIS に変換
           @charset = "shift_jis"
 
-          # # subject を shift_jis に変換してエンコード
-          # @subject_skip_decoder = true
-          # Jpmobile::Emoticon.unicodecr_to_external(@subject, @table, @to_sjis)
-          # @subject = Jpmobile::Emoticon.unicodecr_to_external(@subject, @table, @to_sjis)
-          # @subject = NKF.nkf("-sWx", @subject)
-
+          # 絵文字・漢字コード変換
           @subject = "=?shift_jis?B?" + [@subject].pack("m").delete("\r\n") + "?="
           @subject = NKF.nkf("-sWx", @subject)
           @subject = Jpmobile::Emoticon.unicodecr_to_external(@subject, @table, @to_sjis)
-          # @subject = "=?shift_jis?B?" + [@subject].pack("m").delete("\r\n") + "?="
 
           # 本文変換
           @body = NKF.nkf("-sWx", @body)
           @body = Jpmobile::Emoticon.unicodecr_to_external(@body, @table, @to_sjis)
-# 入力の歳に =?shift_jis?B?...?= としていても TMail::Decoder で一旦 decode され，
-# それが encoded の歳に iso-2022-jp に変換されている問題
-#
-# ただし Decoder を変更すると，今度は普通にメールのデコードができない可能性があり，
-# メール受信に支障を来す．
-#
-# 理想型は，
-#     encoded 時に shift_jis のまま送り出せるようにする
-#     Decoder はそのままにしておく
-# インスタンス変数 ( @emoji ) を用意して，絵文字がある or 携帯電話である場合には，
-# encoded の iso-2022-jp 変換 ( add_with_encode に至るどこか ) をスキップするのがいいか
-#
-# encode.rb だけじゃなくて，header.rb を細工して Subject を変換しないようにするとかか．
-# 結局大幅な hack が必要になる恐れ
-#
-#
-# TMail::Mail の sub class 作ってみる？
-# TMail::Mail.new している部分を条件に応じて変更すればいい
-# - ActionMailer::Base#receive の TMail::Mail.parse
-# - ActionMailer::Base#create_mail の TMail::Mail.new
-# - ActionMailer::Base#create_mail の @parts 内の TMail::Mail.new
-
         when Jpmobile::Mobile::Au
           @table = Jpmobile::Emoticon::CONVERSION_TABLE_TO_AU
           @to_sjis = false
@@ -168,6 +140,7 @@ module ActionMailer
       # 絵文字・漢字コード変換
       case @mobile
       when Jpmobile::Mobile::Docomo
+        # Subject: に直接代入する
         @mail.header["subject"].parsed
         @mail.header["subject"].body = "=?shift_jis?B?" + [@subject].pack("m").delete("\r\n") + "?="
       when Jpmobile::Mobile::Au
