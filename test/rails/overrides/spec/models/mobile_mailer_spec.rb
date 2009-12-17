@@ -149,46 +149,46 @@ describe MobileMailer do
     # end
   end
 
-  # describe "vodafone にメールを送るとき" do
-  #   before(:each) do
-  #     @to = "vodafone@d.vodafone.ne.jp"
-  #   end
+  describe "vodafone にメールを送るとき" do
+#     before(:each) do
+#       @to = "vodafone@d.vodafone.ne.jp"
+#     end
 
-  #   it "subject が JIS になること" do
-  #     mail = MobileMailer.deliver_message(@to, @subject, @text)
+#     it "subject が JIS になること" do
+#       mail = MobileMailer.deliver_message(@to, @subject, @text)
 
-  #     emails = ActionMailer::Base.deliveries
-  #     emails.size.should == 1
-  #     email = emails.first
-  #     email.quoted_body.should match(/For vodafone/)
+#       emails = ActionMailer::Base.deliveries
+#       emails.size.should == 1
+#       email = emails.first
+#       email.quoted_body.should match(/For vodafone/)
+# p email.subject
+#       NKF.nkf('-w', email.subject).should == @subject
+#     end
 
-  #     NKF.nkf('-Jw', email.subject).should == @subject
-  #   end
+    # it "body が JIS になること" do
+    #   mail = MobileMailer.deliver_message(@to, @subject, @text)
 
-  #   it "body が JIS になること" do
-  #     mail = MobileMailer.deliver_message(@to, @subject, @text)
+    #   emails = ActionMailer::Base.deliveries
+    #   emails.size.should == 1
+    #   email = emails.first
+    #   email.quoted_body.should match(/For vodafone/)
 
-  #     emails = ActionMailer::Base.deliveries
-  #     emails.size.should == 1
-  #     email = emails.first
-  #     email.quoted_body.should match(/For vodafone/)
+    #   NKF.nkf('-w', email.quoted_body).should match(/#{@text}/)
+    # end
 
-  #     NKF.nkf('-Jw', email.quoted_body).should match(/#{@text}/)
-  #   end
+    # it "数値参照が〓に変換されること" do
+    #   emoji_subject = @subject + "&#xe676;"
+    #   emoji_text    = @text    + "&#xe68b;"
 
-  #   it "数値参照が〓に変換されること" do
-  #     emoji_subject = @subject + "&#xe676;"
-  #     emoji_text    = @text    + "&#xe68b;"
+    #   mail = MobileMailer.deliver_message(@to, emoji_subject, emoji_text)
 
-  #     mail = MobileMailer.deliver_message(@to, emoji_subject, emoji_text)
+    #   emails = ActionMailer::Base.deliveries
+    #   emails.size.should == 1
+    #   email = emails.first
+    #   email.quoted_body.should match(/For vodafone/)
 
-  #     emails = ActionMailer::Base.deliveries
-  #     emails.size.should == 1
-  #     email = emails.first
-  #     email.quoted_body.should match(/For vodafone/)
-
-  #     email.subject.should == NKF.nkf("-jW", @subject + "〓")
-  #     email.body.should match(/#{@text}〓/)
-  #   end
-  # end
+    #   email.subject.should == NKF.nkf("-jW", @subject + "〓")
+    #   email.body.should match(/#{@text}〓/)
+    # end
+  end
 end

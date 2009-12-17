@@ -106,13 +106,13 @@ module ActionMailer
           @charset = "shift_jis"
 
           # 絵文字・漢字コード変換
-          @subject = "=?shift_jis?B?" + [@subject].pack("m").delete("\r\n") + "?="
-          @subject = NKF.nkf("-sWx", @subject)
-          @subject = Jpmobile::Emoticon.unicodecr_to_external(@subject, @table, @to_sjis)
+          @jpmobile_subject = "=?shift_jis?B?" + [@subject].pack("m").delete("\r\n") + "?="
+          @jpmobile_subject = NKF.nkf("-sWx", @jpmobile_subject)
+          @jpmobile_subject = Jpmobile::Emoticon.unicodecr_to_external(@jpmobile_subject, @table, @to_sjis)
 
           # 本文変換
-          @body = NKF.nkf("-sWx", @body)
-          @body = Jpmobile::Emoticon.unicodecr_to_external(@body, @table, @to_sjis)
+          @jpmobile_body = NKF.nkf("-sWx", @body)
+          @jpmobile_body = Jpmobile::Emoticon.unicodecr_to_external(@jpmobile_body, @table, @to_sjis)
         when Jpmobile::Mobile::Au
           @table = Jpmobile::Emoticon::CONVERSION_TABLE_TO_AU
           @to_sjis = false
@@ -140,9 +140,12 @@ module ActionMailer
       # 絵文字・漢字コード変換
       case @mobile
       when Jpmobile::Mobile::Docomo
+        # body を代入する
+        @mail.body = @jpmobile_body
+
         # Subject: に直接代入する
         @mail.header["subject"].parsed
-        @mail.header["subject"].body = "=?shift_jis?B?" + [@subject].pack("m").delete("\r\n") + "?="
+        @mail.header["subject"].body = "=?shift_jis?B?" + [@jpmobile_subject].pack("m").delete("\r\n") + "?="
       when Jpmobile::Mobile::Au
         # iso-2022-jp に変換
         @mail.charset = "iso-2022-jp"
