@@ -160,12 +160,12 @@ module ActionMailer
         # iso-2022-jp に変換
         @mail.charset = "iso-2022-jp"
 
-        @mail.subject = NKF.nkf("-jW", @mail.subject)
-        @mail.subject = Jpmobile::Emoticon.unicodecr_to_external(@mail.subject, @table, @to_sjis)
-        @mail.subject = "=?ISO-2022-JP?B?" + [@mail.subject].pack("m").delete("\r\n") + "?="
+        @jpmobile_subject = NKF.nkf("-jW", @subject)
+        @jpmobile_subject = Jpmobile::Emoticon.unicodecr_to_external(@jpmobile_subject, @table, @to_sjis)
+        @mail.subject = "=?ISO-2022-JP?B?" + [@jpmobile_subject].pack("m").delete("\r\n") + "?="
 
-        @mail.body = NKF.nkf("-jW", @mail.quoted_body)
-        @mail.body = Jpmobile::Emoticon.unicodecr_to_external(@mail.quoted_body, @table, @to_sjis)
+        @jpmobile_body = NKF.nkf("-jW", @body)
+        @mail.body = Jpmobile::Emoticon.unicodecr_to_external(@jpmobile_body, @table, @to_sjis)
       when Jpmobile::Mobile::Softbank
         # shift_jis に変換
         @mail.charset = "shift_jis"
