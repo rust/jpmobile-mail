@@ -93,7 +93,12 @@ module Jpmobile
             "\x1b\x24#{webcode}\x0f"
           elsif converted == 0x3013
             # ゲタ「〓」の場合はそれに変換する
-            [converted].pack('U')
+            converted = [converted].pack("U")
+            if to_sjis
+              Kconv::kconv(converted, Kconv::SJIS, Kconv::UTF8)
+            else
+              Kconv::kconv(converted, Kconv::JIS, Kconv::UTF8)
+            end
           else
             # キャリア変換テーブルに指定されていたUnicodeに対応する
             # 携帯側エンコーディングが見つからない(変換テーブルの不備の可能性あり)。
