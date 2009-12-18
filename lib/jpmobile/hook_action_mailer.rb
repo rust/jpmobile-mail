@@ -49,7 +49,11 @@ module TMail
 # p "convert #{text} : from #{from} -> to #{to}"
           NKF.nkf("-Wj", text)
         else
-          convert_to_without_nkf(text, to, from)
+          if from =~ /^shift_jis$/i
+            convert_to_without_nkf(text, to, "cp932")
+          else
+            convert_to_without_nkf(text, to, from)
+          end
         end
       end
 
@@ -186,22 +190,22 @@ module ActionMailer
           # @table = CONVERSION_TABLE_TO_PC # ゲタに変換する
           # @to_sjis = false
         when Jpmobile::Mobile::Softbank
-          @table = Jpmobile::Emoticon::CONVERSION_TABLE_TO_SOFTBANK
-          @to_sjis = true
-          # Shift_JIS に変換
-          @charset = "shift_jis"
+          # @table = Jpmobile::Emoticon::CONVERSION_TABLE_TO_SOFTBANK
+          # @to_sjis = true
+          # # Shift_JIS に変換
+          # @charset = "shift_jis"
 
-          # 絵文字・漢字コード変換
-          @jpmobile_subject = "=?shift_jis?B?" + [@subject].pack("m").delete("\r\n") + "?="
-          @jpmobile_subject = NKF.nkf("-sWx", @jpmobile_subject)
-          @jpmobile_subject = Jpmobile::Emoticon.unicodecr_to_external(@jpmobile_subject, @table, @to_sjis)
+          # # 絵文字・漢字コード変換
+          # @jpmobile_subject = "=?shift_jis?B?" + [@subject].pack("m").delete("\r\n") + "?="
+          # @jpmobile_subject = NKF.nkf("-sWx", @jpmobile_subject)
+          # @jpmobile_subject = Jpmobile::Emoticon.unicodecr_to_external(@jpmobile_subject, @table, @to_sjis)
 
-          # 本文変換
-          @jpmobile_body = NKF.nkf("-sWx", @body)
-          @jpmobile_body = Jpmobile::Emoticon.unicodecr_to_external(@jpmobile_body, @table, @to_sjis)
+          # # 本文変換
+          # @jpmobile_body = NKF.nkf("-sWx", @body)
+          # @jpmobile_body = Jpmobile::Emoticon.unicodecr_to_external(@jpmobile_body, @table, @to_sjis)
         else
-          @table = CONVERSION_TABLE_TO_PC # ゲタに変換する
-          @to_sjis = false
+          # @table = CONVERSION_TABLE_TO_PC # ゲタに変換する
+          # @to_sjis = false
         end
       end
 
@@ -284,12 +288,14 @@ module ActionMailer
         # @jpmobile_body = NKF.nkf("-jW", @body)
         # @mail.body = Jpmobile::Emoticon.unicodecr_to_external(@jpmobile_body, @table, @to_sjis)
       when Jpmobile::Mobile::Softbank
-        # body を代入する
-        @mail.body = @jpmobile_body
+        @mail.emoji_convert("shift_jis", "shift_jis", Jpmobile::Emoticon::CONVERSION_TABLE_TO_SOFTBANK, false)
 
-        # Subject: に直接代入する
-        @mail.header["subject"].parsed
-        @mail.header["subject"].body = "=?shift_jis?B?" + [@jpmobile_subject].pack("m").delete("\r\n") + "?="
+        # # body を代入する
+        # @mail.body = @jpmobile_body
+
+        # # Subject: に直接代入する
+        # @mail.header["subject"].parsed
+        # @mail.header["subject"].body = "=?shift_jis?B?" + [@jpmobile_subject].pack("m").delete("\r\n") + "?="
 #         # shift_jis に変換
 #         @mail.charset = "shift_jis"
 # # Tmail::Mail::Unquoter.unquote_and_convert_to で "=?shift_jis?B? ... ?=" などが外されるので，
@@ -320,15 +326,17 @@ module ActionMailer
 # pp @mail.encoded
 # pp "----"
       else
-        # iso-2022-jp に変換
-        @mail.charset = "iso-2022-jp"
+        @mail.emoji_convert("iso-2022-jp", "iso-2022-jp", CONVERSION_TABLE_TO_PC, false)
 
-        @mail.subject = NKF.nkf("-jW", @mail.subject)
-        @mail.subject = Jpmobile::Emoticon.unicodecr_to_external(@mail.subject, @table, @to_sjis)
-        @mail.subject = "=?ISO-2022-JP?B?" + [@mail.subject].pack("m").delete("\r\n") + "?="
+        # # iso-2022-jp に変換
+        # @mail.charset = "iso-2022-jp"
 
-        @mail.body = NKF.nkf("-jW", @mail.quoted_body)
-        @mail.body = Jpmobile::Emoticon.unicodecr_to_external(@mail.body, @table, @to_sjis)
+        # @mail.subject = NKF.nkf("-jW", @mail.subject)
+        # @mail.subject = Jpmobile::Emoticon.unicodecr_to_external(@mail.subject, @table, @to_sjis)
+        # @mail.subject = "=?ISO-2022-JP?B?" + [@mail.subject].pack("m").delete("\r\n") + "?="
+
+        # @mail.body = NKF.nkf("-jW", @mail.quoted_body)
+        # @mail.body = Jpmobile::Emoticon.unicodecr_to_external(@mail.body, @table, @to_sjis)
       end
 
       @mail
