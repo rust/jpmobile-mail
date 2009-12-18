@@ -31,7 +31,7 @@ module Jpmobile
       end
     end
 
-    # +str+ のなかでDoCoMo絵文字をUnicode数値文字参照に置換した文字列を返す。
+    # +str+ のなかでau絵文字をUnicode数値文字参照に置換した文字列を返す。
     def self.external_to_unicodecr_au(str)
       str.gsub(AU_SJIS_REGEXP) do |match|
         sjis = match.unpack('n').first

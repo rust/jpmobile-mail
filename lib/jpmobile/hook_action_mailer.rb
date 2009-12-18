@@ -2,6 +2,14 @@
 # 絵文字と文字コードの変換処理
 #   とりあえず1ファイルに書く
 
+# 定数
+SJIS_ONE_BYTE  = '[\x00-\x7F\xA1-\xDF]'
+SJIS_TWO_BYTES = '[\x81-\x9F\xE0-\xFC][\x40-\x7E\x80-\xFC]'
+SJIS_IMODE_PICTOGRAM = '\xF8[\x9F-\xFC]|\xF9[\x40-\x7E\x80-\xB0]|\xF9[\xB1-\xFC]'
+SJIS_EZWEB_PICTOGRAM = '[\xF3\xF6\xF7][\x40-\x7E\x80-\xFC]|\xF4[\x40-\x7E\x80-\x8D]'
+RE_IMODE_SJIS = Regexp.new("((#{SJIS_IMODE_PICTOGRAM})|(#{SJIS_ONE_BYTE}|#{SJIS_TWO_BYTES}))")
+RE_EZWEB_SJIS = /(#{SJIS_EZWEB_PICTOGRAM}|#{SJIS_ONE_BYTE}|#{SJIS_TWO_BYTES})/
+
 # convert_to で機種依存文字や絵文字に対応するために
 # Unquoter 内で NKF を使用するようにしたもの
 module TMail
@@ -26,11 +34,50 @@ module TMail
     class << self
       # http://www.kbmj.com/~shinya/rails_seminar/slides/#(30)
       def convert_to_with_nkf(text, to, from)
-        if text && to =~ /^utf-8$/i && from =~ /^iso-2022-jp$/i
-          NKF.nkf("-Jw", text)
-        elsif text && from =~ /^utf-8$/i && to =~ /^iso-2022-jp$/i
-          NKF.nkf("-Wj", text)
+        # メール受信時に絵文字を変換する
+        # メール生成時はここを経由しない
+        case text
+        when RE_IMODE_SJIS
+          text = Jpmobile::Emoticon.external_to_unicodecr_docomo(text)
+        when RE_EZWEB_SJIS
+        end
+
+        # to
+        jpmobile_to = case to
+                      when /^utf-8$/i
+                        "w"
+                      when /^iso-2022-jp$/i
+                        "j"
+                      when /^shift_jis$/i
+                        "sx"
+                      else
+                        nil
+                      end
+        # from
+        jpmobile_from = case from
+                        when /^utf-8$/i
+                          "W"
+                        when /^iso-2022-jp$/i
+                          "J"
+                        when /^shift_jis$/i
+                          # NKF に推測させないと Softbank 絵文字を変換してしまう
+                          if text =~ /\x1b\x24/
+                            "x --no-cp932"
+                          else
+                            "Sx --no-cp932"
+                          end
+                        else
+                          nil
+                        end
+# p text
+# p jpmobile_from
+# p jpmobile_to
+        if text and jpmobile_from and jpmobile_to
+          # convert
+# p NKF.nkf("-#{jpmobile_to}#{jpmobile_from}", text)
+          NKF.nkf("-#{jpmobile_to}#{jpmobile_from}", text)
         else
+# p convert_to_without_nkf(text, to, from)
           convert_to_without_nkf(text, to, from)
         end
       end
@@ -49,7 +96,7 @@ module TMail
     def self.decode( str, encoding = nil )
       # shift_jis の場合のみ半角カナを許可する
       if str =~ %r!=\?shift_jis\?B\?([A-Za-z0-9\+/=]+)\?=! and $1
-        return NKF.nkf("-mBwx", $1)
+        return NKF.nkf("-mBwx --no-cp932", $1)
       end
 
       decode_without_jpmobile(str, encoding)
@@ -122,7 +169,17 @@ module ActionMailer
         when Jpmobile::Mobile::Softbank
           @table = Jpmobile::Emoticon::CONVERSION_TABLE_TO_SOFTBANK
           @to_sjis = true
+          # Shift_JIS に変換
           @charset = "shift_jis"
+
+          # 絵文字・漢字コード変換
+          @jpmobile_subject = "=?shift_jis?B?" + [@subject].pack("m").delete("\r\n") + "?="
+          @jpmobile_subject = NKF.nkf("-sWx", @jpmobile_subject)
+          @jpmobile_subject = Jpmobile::Emoticon.unicodecr_to_external(@jpmobile_subject, @table, @to_sjis)
+
+          # 本文変換
+          @jpmobile_body = NKF.nkf("-sWx", @body)
+          @jpmobile_body = Jpmobile::Emoticon.unicodecr_to_external(@jpmobile_body, @table, @to_sjis)
         else
           @table = CONVERSION_TABLE_TO_PC # ゲタに変換する
           @to_sjis = false
@@ -167,35 +224,41 @@ module ActionMailer
         @jpmobile_body = NKF.nkf("-jW", @body)
         @mail.body = Jpmobile::Emoticon.unicodecr_to_external(@jpmobile_body, @table, @to_sjis)
       when Jpmobile::Mobile::Softbank
-        # shift_jis に変換
-        @mail.charset = "shift_jis"
-# Tmail::Mail::Unquoter.unquote_and_convert_to で "=?shift_jis?B? ... ?=" などが外されるので，
-# それを受けて次の encoded に入る際にどうやら再度 @@default_charset で encode される模様
-# Tmail なのか ActionMailer なのかちゃんと判断しないといけない
-require 'pp'
-pp "\n"
-pp @mail.encoded
-pp "before"
-        @mail.subject = NKF.nkf("-sWx", @mail.subject)
-pp "translated"
-pp @mail.quoted_subject
-pp @mail.encoded
-        @mail.subject = Jpmobile::Emoticon.unicodecr_to_external(@mail.subject, @table, @to_sjis)
-pp "convert-emoticon"
-pp @mail.quoted_subject
-pp @mail.encoded
-        @mail.subject = "=?shift_jis?B?" + [@mail.subject].pack("m").delete("\r\n") + "?="
-pp "encode-subject"
-pp @mail.quoted_subject
-pp @mail.encoded
-pp @mail.class
-pp "after"
+        # body を代入する
+        @mail.body = @jpmobile_body
 
-        @mail.body = NKF.nkf("-sWx", @mail.quoted_body)
-        @mail.body = Jpmobile::Emoticon.unicodecr_to_external(@mail.quoted_body, @table, @to_sjis)
-pp "body"
-pp @mail.encoded
-pp "----"
+        # Subject: に直接代入する
+        @mail.header["subject"].parsed
+        @mail.header["subject"].body = "=?shift_jis?B?" + [@jpmobile_subject].pack("m").delete("\r\n") + "?="
+#         # shift_jis に変換
+#         @mail.charset = "shift_jis"
+# # Tmail::Mail::Unquoter.unquote_and_convert_to で "=?shift_jis?B? ... ?=" などが外されるので，
+# # それを受けて次の encoded に入る際にどうやら再度 @@default_charset で encode される模様
+# # Tmail なのか ActionMailer なのかちゃんと判断しないといけない
+# require 'pp'
+# pp "\n"
+# pp @mail.encoded
+# pp "before"
+#         @mail.subject = NKF.nkf("-sWx", @mail.subject)
+# pp "translated"
+# pp @mail.quoted_subject
+# pp @mail.encoded
+#         @mail.subject = Jpmobile::Emoticon.unicodecr_to_external(@mail.subject, @table, @to_sjis)
+# pp "convert-emoticon"
+# pp @mail.quoted_subject
+# pp @mail.encoded
+#         @mail.subject = "=?shift_jis?B?" + [@mail.subject].pack("m").delete("\r\n") + "?="
+# pp "encode-subject"
+# pp @mail.quoted_subject
+# pp @mail.encoded
+# pp @mail.class
+# pp "after"
+
+#         @mail.body = NKF.nkf("-sWx", @mail.quoted_body)
+#         @mail.body = Jpmobile::Emoticon.unicodecr_to_external(@mail.quoted_body, @table, @to_sjis)
+# pp "body"
+# pp @mail.encoded
+# pp "----"
       else
         # iso-2022-jp に変換
         @mail.charset = "iso-2022-jp"
