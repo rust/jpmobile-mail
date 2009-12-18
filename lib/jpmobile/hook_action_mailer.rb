@@ -131,11 +131,21 @@ module ActionMailer
       @mail
     end
 
+    # deliver
     alias :deliver_without_jpmobile! :deliver!
 
     def deliver!(mail = @mail)
       r = deliver_without_jpmobile!(mail)
       r
+    end
+
+    # receive
+    alias :receive_without_jpmobile :receive
+
+    def receive(raw_mail)
+      @raw_data = raw_mail
+
+      receive_without_jpmobile(raw_mail)
     end
   end
 end

@@ -6,6 +6,7 @@ class MobileMailer < ActionMailer::Base
     body       :text => text
   end
 
-  def recieve(mail)
+  def receive(mail)
+    email
   end
 end
