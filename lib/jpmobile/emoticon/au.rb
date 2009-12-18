@@ -1285,3 +1285,4 @@ Jpmobile::Emoticon::AU_EMAILJIS_TO_UNICODE = {
   0x7B6C=>0xEB87,
   0x7B6D=>0xEB88,
 }.freeze
+Jpmobile::Emoticon::AU_UNICODE_TO_EMAILJIS = Jpmobile::Emoticon::AU_EMAILJIS_TO_UNICODE.invert.freeze

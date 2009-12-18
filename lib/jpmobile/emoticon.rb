@@ -118,6 +118,30 @@ module Jpmobile
         end
       end
     end
+
+    # +str+ のなかでUnicode数値文字参照で表記された絵文字をメール送信用JISコードに変換する
+    # au 専用
+    def self.unicodecr_to_email(str)
+      str.gsub(/&#x([0-9a-f]{4});/i) do |match|
+        unicode = $1.scanf("%x").first
+        converted = Jpmobile::Emoticon::CONVERSION_TABLE_TO_AU[unicode]
+
+        # メール用エンコーディングに変換する
+        case converted
+        when Integer
+          if jis = Jpmobile::Emoticon::AU_UNICODE_TO_EMAILJIS[converted]
+            "\x1b\x24\x42#{[jis].pack('n')}\x1b\x28\x42"
+          else
+            match
+          end
+        when String
+          Kconv::kconv(converted, Kconv::JIS, Kconv::UTF8)
+        else
+          match
+        end
+      end
+    end
+
     # +str+ のなかでUnicode数値文字参照で表記された絵文字をUTF-8に置換する。
     def self.unicodecr_to_utf8(str)
       str.gsub(/&#x([0-9a-f]{4});/i) do |match|

@@ -184,8 +184,8 @@ module ActionMailer
           # @charset = "shift_jis"
           # @nkf_opts = "-sWx"
         when Jpmobile::Mobile::Au
-          @table = Jpmobile::Emoticon::CONVERSION_TABLE_TO_AU
-          @to_sjis = false
+          # @table = Jpmobile::Emoticon::CONVERSION_TABLE_TO_AU
+          # @to_sjis = false
         when Jpmobile::Mobile::Vodafone, Jpmobile::Mobile::Jphone
           # @table = CONVERSION_TABLE_TO_PC # ゲタに変換する
           # @to_sjis = false
@@ -219,11 +219,12 @@ module ActionMailer
 
       # TMail::Mail の encoded を hook する
       @mail.instance_eval do
-        def emoji_convert(mail_encode, body_encode, table, to_sjis)
+        def emoji_convert(mail_encode, body_encode, table, to_sjis, mobile = nil)
           @mail_encode = mail_encode
           @emoji_table = table
           @emoji_sjis  = to_sjis
           @nkf_opts    = Jpmobile::Emoticon::NKF_OPTIONS[@mail_encode]
+          @mobile      = mobile
         end
 
         alias :encoded_without_jpmobile :encoded
@@ -240,7 +241,12 @@ module ActionMailer
             @jpm_subject = "=?#{@mail_encode}?B?" + [@jpm_subject].pack("m").delete("\r\n") + "?="
 
             @jpm_body    = NKF.nkf(@nkf_opts, self.body)
-            @jpm_body    = Jpmobile::Emoticon.unicodecr_to_external(@jpm_body, @emoji_table, @emoji_sjis)
+            case @mobile
+            when Jpmobile::Mobile::Au
+              @jpm_body = Jpmobile::Emoticon.unicodecr_to_email(@jpm_body)
+            else
+              @jpm_body = Jpmobile::Emoticon.unicodecr_to_external(@jpm_body, @emoji_table, @emoji_sjis)
+            end
 
             self.header["subject"].instance_variable_set(:@body, @jpm_subject)
             self.body = @jpm_body
@@ -266,15 +272,16 @@ module ActionMailer
         # @mail.body = NKF.nkf(@nkf_opts, @mail.body)
         # @mail.body = Jpmobile::Emoticon.unicodecr_to_external(@mail.body, @table, @to_sjis)
       when Jpmobile::Mobile::Au
-        # iso-2022-jp に変換
-        @mail.charset = "iso-2022-jp"
+        @mail.emoji_convert("iso-2022-jp", "iso-2022-jp", Jpmobile::Emoticon::CONVERSION_TABLE_TO_AU, false, @mobile)
+        # # iso-2022-jp に変換
+        # @mail.charset = "iso-2022-jp"
 
-        @mail.subject = NKF.nkf("-jW", @mail.subject)
-        @mail.subject = Jpmobile::Emoticon.unicodecr_to_external(@mail.subject, @table, @to_sjis)
-        @mail.subject = "=?ISO-2022-JP?B?" + [@mail.subject].pack("m").delete("\r\n") + "?="
+        # @mail.subject = NKF.nkf("-jW", @mail.subject)
+        # @mail.subject = Jpmobile::Emoticon.unicodecr_to_external(@mail.subject, @table, @to_sjis)
+        # @mail.subject = "=?ISO-2022-JP?B?" + [@mail.subject].pack("m").delete("\r\n") + "?="
 
-        @mail.body = NKF.nkf("-jW", @mail.quoted_body)
-        @mail.body = Jpmobile::Emoticon.unicodecr_to_external(@mail.body, @table, @to_sjis)
+        # @mail.body = NKF.nkf("-jW", @mail.quoted_body)
+        # @mail.body = Jpmobile::Emoticon.unicodecr_to_external(@mail.body, @table, @to_sjis)
       when Jpmobile::Mobile::Vodafone, Jpmobile::Mobile::Jphone
         @mail.emoji_convert("iso-2022-jp", "iso-2022-jp", CONVERSION_TABLE_TO_PC, false)
 
