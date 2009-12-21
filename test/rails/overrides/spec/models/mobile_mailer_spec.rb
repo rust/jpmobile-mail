@@ -99,8 +99,7 @@ describe MobileMailer do
       email.body.should match(/For au/)
       email.quoted_body.unpack("H*").first.should match(/7621/)
 
-      email.quoted_subject.match(@jis_regexp)
-      $1.unpack("m").first.unpack("H*").first.should match(/765e/)
+      email.quoted_subject.unpack("H*").first.should match(/765e/)
     end
   end
 
@@ -192,7 +191,7 @@ describe MobileMailer do
       email.body.should match(/For vodafone/)
       email.body.should match(/#{@text}〓/)
 
-      email.subject.should == @subject + "〓"
+      NKF.nkf("-wJx", email.subject) == @subject + "〓"
     end
   end
 end

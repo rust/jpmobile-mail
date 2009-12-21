@@ -68,8 +68,9 @@ module ActionMailer
           @jpm_encode = "shift_jis"
           @to_sjis    = true
         else
-          @jpm_encode = "iso-2022-jp"
-          @to_sjis    = false
+          # 上記以外は iso-2022-jp で送信する
+          @charset = "iso-2022-jp"
+          @mobile = nil
         end
       end
 
@@ -99,25 +100,22 @@ module ActionMailer
             @jpm_subject = "=?#{@mail_encode}?B?" + [@jpm_subject].pack("m").delete("\r\n") + "?="
 
             case @mobile
-            when Jpmobile::Mobile::Au
+            when Jpmobile::Mobile::Au, Jpmobile::Mobile::Vodafone, Jpmobile::Mobile::Jphone
               @jpm_body = self.quoted_body
-
-              @jpm_body = NKF.nkf(@nkf_opts, @jpm_body)
-              @jpm_body = Jpmobile::Emoticon.unicodecr_to_email(@jpm_body, @mobile)
-
               self.charset = @mail_encode
+
+              # AU は iso-2022-jp なのでそのまま
               self.subject = @jpm_subject
-              self.body    = @jpm_body
             else
               @jpm_body = self.body
-
-              @jpm_body = NKF.nkf(@nkf_opts, @jpm_body)
-              @jpm_body = Jpmobile::Emoticon.unicodecr_to_email(@jpm_body, @mobile)
-
               self.charset = @mail_encode
+
               self.header["subject"].instance_variable_set(:@body, @jpm_subject)
-              self.body    = @jpm_body
             end
+
+            @jpm_body = NKF.nkf(@nkf_opts, @jpm_body)
+            @jpm_body = Jpmobile::Emoticon.unicodecr_to_email(@jpm_body, @mobile)
+            self.body    = @jpm_body
           end
 
           encoded_without_jpmobile
