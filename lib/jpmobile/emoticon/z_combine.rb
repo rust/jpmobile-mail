@@ -16,5 +16,9 @@ module Jpmobile
 
     EMOTICON_UNICODES = UNICODE_TO_SJIS.keys|SOFTBANK_UNICODE_TO_WEBCODE.keys.map{|k|k+0x1000}
     UTF8_REGEXP = Regexp.union(*EMOTICON_UNICODES.map{|x| [x].pack('U')}).freeze
+
+    # for PC convertion "GETA"
+    CONVERSION_TABLE_TO_PC = {}
+    CONVERSION_TABLE_TO_SOFTBANK.each{|k, v| CONVERSION_TABLE_TO_PC[k] = 0x3013}
   end
 end

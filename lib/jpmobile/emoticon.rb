@@ -94,6 +94,7 @@ module Jpmobile
           elsif converted == 0x3013
             # ゲタ「〓」の場合はそれに変換する
             converted = [converted].pack("U")
+
             if to_sjis
               Kconv::kconv(converted, Kconv::SJIS, Kconv::UTF8)
             else
@@ -119,29 +120,6 @@ module Jpmobile
       end
     end
 
-    # +str+ のなかでUnicode数値文字参照で表記された絵文字をメール送信用JISコードに変換する
-    # au 専用
-    def self.unicodecr_to_email(str)
-      str.gsub(/&#x([0-9a-f]{4});/i) do |match|
-        unicode = $1.scanf("%x").first
-        converted = Jpmobile::Emoticon::CONVERSION_TABLE_TO_AU[unicode]
-
-        # メール用エンコーディングに変換する
-        case converted
-        when Integer
-          if jis = Jpmobile::Emoticon::AU_UNICODE_TO_EMAILJIS[converted]
-            "\x1b\x24\x42#{[jis].pack('n')}\x1b\x28\x42"
-          else
-            match
-          end
-        when String
-          Kconv::kconv(converted, Kconv::JIS, Kconv::UTF8)
-        else
-          match
-        end
-      end
-    end
-
     # +str+ のなかでUnicode数値文字参照で表記された絵文字をUTF-8に置換する。
     def self.unicodecr_to_utf8(str)
       str.gsub(/&#x([0-9a-f]{4});/i) do |match|
@@ -157,6 +135,68 @@ module Jpmobile
     def self.utf8_to_unicodecr(str)
       str.gsub(UTF8_REGEXP) do |match|
         "&#x%04x;" % match.unpack('U').first
+      end
+    end
+
+    # +str+ のなかでUnicode数値文字参照で表記された絵文字を
+    # +carrier+ 用のメール送信用コードに変換する
+    def self.unicodecr_to_email(str, carrier = nil, to_sjis = true)
+      case carrier
+      when Jpmobile::Mobile::Docomo
+        unicodecr_to_external(str, CONVERSION_TABLE_TO_DOCOMO, to_sjis)
+      when Jpmobile::Mobile::Au
+        unicodecr_to_au_email(str)
+      when Jpmobile::Mobile::Vodafone, Jpmobile::Mobile::Jphone
+        unicodecr_to_external(str, CONVERSION_TABLE_TO_PC, false)
+      when Jpmobile::Mobile::Softbank
+        unicodecr_to_softbank_email(str)
+      else
+        unicodecr_to_external(str, CONVERSION_TABLE_TO_PC, false)
+      end
+    end
+
+    private
+    def self.unicodecr_to_au_email(str)
+      str.gsub(/&#x([0-9a-f]{4});/i) do |match|
+        unicode = $1.scanf("%x").first
+        converted = CONVERSION_TABLE_TO_AU[unicode]
+
+        # メール用エンコーディングに変換する
+        case converted
+        when Integer
+          if jis = AU_UNICODE_TO_EMAILJIS[converted]
+            "\x1b\x24\x42#{[jis].pack('n')}\x1b\x28\x42"
+          else
+            match
+          end
+        when String
+          Kconv::kconv(converted, Kconv::JIS, Kconv::UTF8)
+        else
+          match
+        end
+      end
+    end
+
+    # +str+ のなかでUnicode数値文字参照で表記された絵文字をメール送信用JISコードに変換する
+    # softbank 専用
+    def self.unicodecr_to_softbank_email(str)
+      str.gsub(/&#x([0-9a-f]{4});/i) do |match|
+        unicode = $1.scanf("%x").first
+        converted = CONVERSION_TABLE_TO_SOFTBANK[unicode]
+
+        # メール用エンコーディングに変換する
+        case converted
+        when Integer
+          if sjis = SOFTBANK_UNICODE_TO_SJIS[converted-0x1000]
+            [sjis].pack('n')
+          else
+            match
+          end
+        when String
+          Kconv::kconv(converted, Kconv::JIS, Kconv::UTF8)
+        else
+          match
+        end
       end
     end
   end

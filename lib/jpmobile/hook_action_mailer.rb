@@ -38,10 +38,6 @@ module ActionMailer
     WAVE_DASH = [0x301c].pack("U")
     FULLWIDTH_TILDA = [0xff5e].pack("U")
 
-    # 暫定
-    CONVERSION_TABLE_TO_PC = {}
-    Jpmobile::Emoticon::CONVERSION_TABLE_TO_SOFTBANK.each{|k, v| CONVERSION_TABLE_TO_PC[k] = 0x3013}
-
     alias :create_without_jpmobile! :create!
     alias :create_mail_without_jpmobile :create_mail
 
@@ -69,7 +65,7 @@ module ActionMailer
           @to_sjis    = false
         when Jpmobile::Mobile::Vodafone, Jpmobile::Mobile::Jphone
           @jpm_encode = "iso-2022-jp"
-          @table      = CONVERSION_TABLE_TO_PC
+          @table      = Jpmobile::Emoticon::CONVERSION_TABLE_TO_PC
           @to_sjis    = false
         when Jpmobile::Mobile::Softbank
           @jpm_encode = "shift_jis"
@@ -77,7 +73,7 @@ module ActionMailer
           @to_sjis    = true
         else
           @jpm_encode = "iso-2022-jp"
-          @table      = CONVERSION_TABLE_TO_PC
+          @table      = Jpmobile::Emoticon::CONVERSION_TABLE_TO_PC
           @to_sjis    = false
         end
       end
@@ -105,19 +101,14 @@ module ActionMailer
         def encoded
           if @emoji_table
             @jpm_subject = NKF.nkf(@nkf_opts, self.subject)
-            @jpm_subject = Jpmobile::Emoticon.unicodecr_to_external(@jpm_subject, @emoji_table, @emoji_sjis)
+            @jpm_subject = Jpmobile::Emoticon.unicodecr_to_email(@jpm_subject, @mobile)
             @jpm_subject = "=?#{@mail_encode}?B?" + [@jpm_subject].pack("m").delete("\r\n") + "?="
 
-            @jpm_body    = NKF.nkf(@nkf_opts, self.body)
-            case @mobile
-            when Jpmobile::Mobile::Au
-              @jpm_body = Jpmobile::Emoticon.unicodecr_to_email(@jpm_body)
-            else
-              @jpm_body = Jpmobile::Emoticon.unicodecr_to_external(@jpm_body, @emoji_table, @emoji_sjis)
-            end
+            @jpm_body = NKF.nkf(@nkf_opts, self.body)
+            @jpm_body = Jpmobile::Emoticon.unicodecr_to_email(@jpm_body, @mobile)
 
             self.header["subject"].instance_variable_set(:@body, @jpm_subject)
-            self.body = @jpm_body
+            self.body    = @jpm_body
             self.charset = @mail_encode
           end
 
@@ -140,12 +131,14 @@ module ActionMailer
     end
 
     # receive
-    alias :receive_without_jpmobile :receive
+    class << self
+      alias :receive_without_jpmobile :receive
 
-    def receive(raw_mail)
-      @raw_data = raw_mail
+      def receive(raw_mail)
+        @raw_data = raw_mail
 
-      receive_without_jpmobile(raw_mail)
+        receive_without_jpmobile(raw_mail)
+      end
     end
   end
 end

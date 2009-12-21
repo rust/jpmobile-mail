@@ -9,7 +9,7 @@ describe MobileMailer do
     @subject = "日本語題名"
     @text    = "日本語テキスト"
     @sjis_regexp = %r!=\?shift_jis\?B\?(.+)\?=!
-    @jis_regexp  = %r=\?iso-2022-jp\?B\?(.+)\?=!
+    @jis_regexp  = %r!=\?iso-2022-jp\?B\?(.+)\?=!
   end
 
   describe "docomo にメールを送るとき" do
@@ -100,63 +100,62 @@ describe MobileMailer do
       email.quoted_body.unpack("H*").first.should match(/7621/)
 
       email.quoted_subject.match(@jis_regexp)
-      NKF.nkf("-mB", $1).unpack("H*").first.should match(/765c/)
-  end
-end
-
-describe "softbank にメールを送るとき" do
-  before(:each) do
-    @to = "softbank@softbank.ne.jp"
+      $1.unpack("m").first.unpack("H*").first.should match(/765e/)
+    end
   end
 
-  it "subject が Shift_JIS になること" do
-    mail = MobileMailer.deliver_message(@to, @subject, @text)
+  describe "softbank にメールを送るとき" do
+    before(:each) do
+      @to = "softbank@softbank.ne.jp"
+    end
 
-    emails = ActionMailer::Base.deliveries
-    emails.size.should == 1
-    email = emails.first
-    email.body.should match(/For softbank/)
+    it "subject が Shift_JIS になること" do
+      mail = MobileMailer.deliver_message(@to, @subject, @text)
 
-    NKF.nkf("-w", email.subject).should == @subject
+      emails = ActionMailer::Base.deliveries
+      emails.size.should == 1
+      email = emails.first
+      email.body.should match(/For softbank/)
+
+      NKF.nkf("-w", email.subject).should == @subject
+    end
+
+    it "body が Shift_JIS になること" do
+      mail = MobileMailer.deliver_message(@to, @subject, @text)
+
+      emails = ActionMailer::Base.deliveries
+      emails.size.should == 1
+      email = emails.first
+      email.body.should match(/For softbank/)
+
+      email.body.should match(/For softbank/)
+      email.quoted_body.should match(/#{NKF.nkf("-sWx", @text)}/)
+    end
+
+    it "数値参照が絵文字に変換されること" do
+      emoji_subject = @subject + "&#xe676;"
+      emoji_text    = @text    + "&#xe68a;"
+
+      mail = MobileMailer.deliver_message(@to, emoji_subject, emoji_text)
+
+      emails = ActionMailer::Base.deliveries
+      emails.size.should == 1
+      email = emails.first
+
+      # subject
+      email.quoted_subject.match(@sjis_regexp)
+      $1.unpack("m").first.unpack("H*").first.should match(/f97c/)
+
+      # body
+      email.body.should match(/For softbank/)
+      email.quoted_body.unpack("H*").first.should match(/f76a/)
+    end
   end
 
-  it "body が Shift_JIS になること" do
-    mail = MobileMailer.deliver_message(@to, @subject, @text)
-
-    emails = ActionMailer::Base.deliveries
-    emails.size.should == 1
-    email = emails.first
-    email.body.should match(/For softbank/)
-
-    email.body.should match(/For softbank/)
-    email.quoted_body.should match(/#{NKF.nkf("-sWx", @text)}/)
-  end
-
-  it "数値参照が絵文字に変換されること" do
-    emoji_subject = @subject + "&#xe676;"
-    emoji_text    = @text    + "&#xe68a;"
-
-    mail = MobileMailer.deliver_message(@to, emoji_subject, emoji_text)
-
-    emails = ActionMailer::Base.deliveries
-    emails.size.should == 1
-    email = emails.first
-
-    # subject
-    w = "G\\"
-    email.subject.should match(/G\\/)
-
-    # body
-    email.body.should match(/For softbank/)
-    w = 'EJ'
-    email.body.should match(/EJ/)
-  end
-end
-
-describe "vodafone にメールを送るとき" do
-  before(:each) do
-    @to = "vodafone@d.vodafone.ne.jp"
-  end
+  describe "vodafone にメールを送るとき" do
+    before(:each) do
+      @to = "vodafone@d.vodafone.ne.jp"
+    end
 
     it "subject が JIS になること" do
       mail = MobileMailer.deliver_message(@to, @subject, @text)
