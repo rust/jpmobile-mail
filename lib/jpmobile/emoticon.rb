@@ -164,8 +164,12 @@ module Jpmobile
         # メール用エンコーディングに変換する
         case converted
         when Integer
-          if jis = AU_UNICODE_TO_EMAILJIS[converted]
-            "\x1b\x24\x42#{[jis].pack('n')}\x1b\x28\x42"
+          if sjis = UNICODE_TO_SJIS[converted]
+            if email_jis = SJIS_TO_EMAIL_JIS[sjis]
+              "\x1b\x24\x42#{[email_jis].pack('n')}\x1b\x28\x42"
+            else
+              [sjis].pack('n')
+            end
           else
             match
           end

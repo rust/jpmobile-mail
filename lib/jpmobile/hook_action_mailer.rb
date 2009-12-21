@@ -57,23 +57,18 @@ module ActionMailer
         case @mobile
         when Jpmobile::Mobile::Docomo
           @jpm_encode = "shift_jis"
-          @table      = Jpmobile::Emoticon::CONVERSION_TABLE_TO_DOCOMO
           @to_sjis    = true
         when Jpmobile::Mobile::Au
           @jpm_encode = "iso-2022-jp"
-          @table      = Jpmobile::Emoticon::CONVERSION_TABLE_TO_AU
           @to_sjis    = false
         when Jpmobile::Mobile::Vodafone, Jpmobile::Mobile::Jphone
           @jpm_encode = "iso-2022-jp"
-          @table      = Jpmobile::Emoticon::CONVERSION_TABLE_TO_PC
           @to_sjis    = false
         when Jpmobile::Mobile::Softbank
           @jpm_encode = "shift_jis"
-          @table      = Jpmobile::Emoticon::CONVERSION_TABLE_TO_SOFTBANK
           @to_sjis    = true
         else
           @jpm_encode = "iso-2022-jp"
-          @table      = Jpmobile::Emoticon::CONVERSION_TABLE_TO_PC
           @to_sjis    = false
         end
       end
@@ -88,9 +83,8 @@ module ActionMailer
 
       # TMail::Mail の encoded を hook する
       @mail.instance_eval do
-        def emoji_convert(mail_encode, body_encode, table, to_sjis, mobile = nil)
+        def emoji_convert(mail_encode, body_encode, to_sjis, mobile = nil)
           @mail_encode = mail_encode
-          @emoji_table = table
           @emoji_sjis  = to_sjis
           @nkf_opts    = Jpmobile::Emoticon::NKF_OPTIONS[@mail_encode]
           @mobile      = mobile
@@ -99,17 +93,31 @@ module ActionMailer
         alias :encoded_without_jpmobile :encoded
 
         def encoded
-          if @emoji_table
+          if @mobile
             @jpm_subject = NKF.nkf(@nkf_opts, self.subject)
             @jpm_subject = Jpmobile::Emoticon.unicodecr_to_email(@jpm_subject, @mobile)
             @jpm_subject = "=?#{@mail_encode}?B?" + [@jpm_subject].pack("m").delete("\r\n") + "?="
 
-            @jpm_body = NKF.nkf(@nkf_opts, self.body)
-            @jpm_body = Jpmobile::Emoticon.unicodecr_to_email(@jpm_body, @mobile)
+            case @mobile
+            when Jpmobile::Mobile::Au
+              @jpm_body = self.quoted_body
 
-            self.header["subject"].instance_variable_set(:@body, @jpm_subject)
-            self.body    = @jpm_body
-            self.charset = @mail_encode
+              @jpm_body = NKF.nkf(@nkf_opts, @jpm_body)
+              @jpm_body = Jpmobile::Emoticon.unicodecr_to_email(@jpm_body, @mobile)
+
+              self.charset = @mail_encode
+              self.subject = @jpm_subject
+              self.body    = @jpm_body
+            else
+              @jpm_body = self.body
+
+              @jpm_body = NKF.nkf(@nkf_opts, @jpm_body)
+              @jpm_body = Jpmobile::Emoticon.unicodecr_to_email(@jpm_body, @mobile)
+
+              self.charset = @mail_encode
+              self.header["subject"].instance_variable_set(:@body, @jpm_subject)
+              self.body    = @jpm_body
+            end
           end
 
           encoded_without_jpmobile
@@ -117,7 +125,7 @@ module ActionMailer
       end
 
       # 絵文字・漢字コード変換
-      @mail.emoji_convert(@jpm_encode, @jpm_encode, @table, @to_sjis, @mobile)
+      @mail.emoji_convert(@jpm_encode, @jpm_encode, @to_sjis, @mobile)
 
       @mail
     end
