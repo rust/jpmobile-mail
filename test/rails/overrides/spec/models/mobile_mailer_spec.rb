@@ -275,23 +275,23 @@ describe MobileMailer, "receiving" do
   #   end
   # end
 
-  # describe "softbank からのメールを受信するとき" do
-  #   before(:each) do
-  #     @email = open(Rails.root + "spec/fixtures/mobile_mailer/softbank-emoji.eml").read
-  #   end
+  describe "softbank からのメールを受信するとき" do
+    before(:each) do
+      @email = open(Rails.root + "spec/fixtures/mobile_mailer/softbank-emoji.eml").read
+    end
 
-  #   it "漢字コードを適切に変換できること" do
-  #     email = MobileMailer.receive(@email)
+    it "漢字コードを適切に変換できること" do
+      email = MobileMailer.receive(@email)
 
-  #     email.subject.should match(/題名/)
-  #     email.body.should match(/本文/)
-  #   end
+      email.subject.should match(/題名/)
+      email.body.should match(/本文/)
+    end
 
-  #   it "絵文字が数値参照に変わること" do
-  #     email = MobileMailer.receive(@email)
+    it "絵文字が数値参照に変わること" do
+      email = MobileMailer.receive(@email)
 
-  #     email.subject.should match(/&#xe676;/)
-  #     email.subject.should match(/&#xe6e2;/)
-  #   end
-  # end
+      email.subject.should match(/&#xe676;/)
+      email.subject.should match(/&#xe6e2;/)
+    end
+  end
 end

@@ -155,6 +155,7 @@ module ActionMailer
           header = @mail.instance_variable_get(:@header)
           subject = header["subject"].instance_variable_get(:@body)
 
+          # FIXME: 漢字コード決めうちなので汎用的な方法に変更
           case @mobile
           when Jpmobile::Mobile::Docomo
             # subject の絵文字・漢字コード変換
