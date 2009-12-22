@@ -290,8 +290,8 @@ describe MobileMailer, "receiving" do
     it "絵文字が数値参照に変わること" do
       email = MobileMailer.receive(@email)
 
-      email.subject.should match(/&#xe676;/)
-      email.subject.should match(/&#xe6e2;/)
+      email.subject.should match(/&#xf03c;/)
+      email.body.should match(/&#xf21c;/)
     end
   end
 end

@@ -3,12 +3,18 @@
 #   とりあえず1ファイルに書く
 
 # 定数
-Jpmobile::Emoticon::NKF_OPTIONS = {
+Jpmobile::Emoticon::SEND_NKF_OPTIONS = {
   "shift_jis"   => "-sWx --no-cp932",
   "iso-2022-jp" => "-jW",
 }
-encoded = '=\?(?:iso-2022-jp|euc-jp|shift_jis)\?[QB]\?[a-z0-9+/=]+\?='
-ENCODED_WORDS = /#{encoded}((?:\s+#{encoded}))*/i
+Jpmobile::Emoticon::RECEIVE_NKF_OPTIONS = {
+  "shift_jis"   => "-wSx --no-cp932",
+  "iso-2022-jp" => "-wJ",
+  "euc-jp"      => "-wE",
+  "utf-8"       => "-wW",
+}
+
+Jpmobile::Emoticon::SUBJECT_REGEXP = %r!=\?(shift[_-]jis|iso-2022-jp|euc-jp|utf-8)\?B\?(.+)\?=!i
 
 Jpmobile::Emoticon::SJIS_SUBJECT_REGEXP = %r!=\?shift_jis\?B\?([a-z0-9+\/=]+)\?=!i
 Jpmobile::Emoticon::JIS_SUBJECT_REGEXP  = %r!=\?iso-2022-jp\?B\?(.+)\?=!i
@@ -92,7 +98,7 @@ module ActionMailer
         def emoji_convert(mail_encode, body_encode, to_sjis, mobile = nil)
           @mail_encode = mail_encode
           @emoji_sjis  = to_sjis
-          @nkf_opts    = Jpmobile::Emoticon::NKF_OPTIONS[@mail_encode]
+          @nkf_opts    = Jpmobile::Emoticon::SEND_NKF_OPTIONS[@mail_encode]
           @mobile      = mobile
         end
 
@@ -154,20 +160,38 @@ module ActionMailer
           # 携帯であれば subject は @header から直接取得して変換する
           header = @mail.instance_variable_get(:@header)
           subject = header["subject"].instance_variable_get(:@body)
+          if subject.match(Jpmobile::Emoticon::SUBJECT_REGEXP)
+            code    = $1
+            subject = $2
+          else
+            code    = nil
+          end
 
           # FIXME: 漢字コード決めうちなので汎用的な方法に変更
           case @mobile
           when Jpmobile::Mobile::Docomo
+            # shift_jis コードであることが前提
+
             # subject の絵文字・漢字コード変換
-            subject = $1.unpack('m').first if subject.match(Jpmobile::Emoticon::SJIS_SUBJECT_REGEXP)
-            subject = Jpmobile::Emoticon.external_to_unicodecr_docomo(subject)
-            @mail.subject = NKF.nkf("-wSx", subject)
+            subject = Jpmobile::Emoticon.external_to_unicodecr_docomo(subject.unpack('m').first)
+            @mail.subject = NKF.nkf(Jpmobile::Emoticon::RECEIVE_NKF_OPTIONS[code.downcase], subject)
 
             # body の絵文字・漢字コード変換
             body = Jpmobile::Emoticon.external_to_unicodecr_docomo(@mail.quoted_body)
-            @mail.body = NKF.nkf("-wSx", body)
+            @mail.body = NKF.nkf(Jpmobile::Emoticon::RECEIVE_NKF_OPTIONS[code.downcase], body)
           when Jpmobile::Mobile::Au
           when Jpmobile::Mobile::Softbank
+            # FIXME: UNICODE で来る場合を考える
+            # shift_jis の場合
+
+            # subject の絵文字・漢字コード変換
+            # subject = Jpmobile::Emoticon.external_to_unicodecr_softbank(subject.unpack('m').first)
+            subject = Jpmobile::Emoticon.external_to_unicodecr_softbank_sjis(subject.unpack('m').first)
+            @mail.subject = NKF.nkf(Jpmobile::Emoticon::RECEIVE_NKF_OPTIONS[code.downcase], subject)
+
+            # body の絵文字・漢字コード変換
+            body = Jpmobile::Emoticon.external_to_unicodecr_softbank_sjis(@mail.quoted_body)
+            @mail.body = NKF.nkf(Jpmobile::Emoticon::RECEIVE_NKF_OPTIONS[code.downcase], body)
           end
         end
 

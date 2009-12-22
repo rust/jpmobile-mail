@@ -24,5 +24,7 @@ module Jpmobile
     # for PC convertion "GETA"
     CONVERSION_TABLE_TO_PC = {}
     CONVERSION_TABLE_TO_SOFTBANK.each{|k, v| CONVERSION_TABLE_TO_PC[k] = 0x3013}
+
+    SOFTBANK_SJIS_REGEXP = Regexp.union(*SOFTBANK_SJIS_TO_UNICODE.keys.map{|s| Regexp.compile(Regexp.escape([s].pack('n'),"s"),nil,'s')}).freeze
   end
 end

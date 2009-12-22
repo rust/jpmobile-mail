@@ -48,6 +48,14 @@ module Jpmobile
         "&#x%04x;" % (unicode+0x1000)
       end
     end
+    def self.external_to_unicodecr_softbank_sjis(str)
+      # SoftBank Shift_JIS
+      str.gsub(SOFTBANK_SJIS_REGEXP) do |match|
+        sjis = match.unpack('n').first
+        unicode = SOFTBANK_SJIS_TO_UNICODE[sjis]
+        "&#x%04x;" % (unicode+0x1000)
+      end
+    end
     def self.external_to_unicodecr_vodafone(str)
       external_to_unicodecr_softbank(str)
     end
