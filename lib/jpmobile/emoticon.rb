@@ -110,6 +110,7 @@ module Jpmobile
           if converted.match(/&#x([0-9a-f]{4});/i)
             self.unicodecr_to_external(converted, conversion_table, to_sjis)
           else
+            # FIXME: 絵文字の代替が文章でいいかどうかの検証
             # 変換先が文字列で指定されている。
             to_sjis ? NKF.nkf('-m0 -x -Ws', converted) : converted
           end
@@ -174,6 +175,7 @@ module Jpmobile
             match
           end
         when String
+          # FIXME: 絵文字の代替が文章でいいかどうかの検証
           Kconv::kconv(converted, Kconv::JIS, Kconv::UTF8)
         else
           match
@@ -197,6 +199,7 @@ module Jpmobile
             match
           end
         when String
+          # FIXME: 絵文字の代替が文章でいいかどうかの検証
           Kconv::kconv(converted, Kconv::SJIS, Kconv::UTF8)
         else
           match

@@ -7,6 +7,6 @@ class MobileMailer < ActionMailer::Base
   end
 
   def receive(mail)
-    email
+    mail
   end
 end

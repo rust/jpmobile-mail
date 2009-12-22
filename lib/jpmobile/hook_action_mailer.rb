@@ -7,6 +7,11 @@ Jpmobile::Emoticon::NKF_OPTIONS = {
   "shift_jis"   => "-sWx --no-cp932",
   "iso-2022-jp" => "-jW",
 }
+encoded = '=\?(?:iso-2022-jp|euc-jp|shift_jis)\?[QB]\?[a-z0-9+/=]+\?='
+ENCODED_WORDS = /#{encoded}((?:\s+#{encoded}))*/i
+
+Jpmobile::Emoticon::SJIS_SUBJECT_REGEXP = %r!=\?shift_jis\?B\?([a-z0-9+\/=]+)\?=!i
+Jpmobile::Emoticon::JIS_SUBJECT_REGEXP  = %r!=\?iso-2022-jp\?B\?(.+)\?=!i
 
 # convert_to で機種依存文字や絵文字に対応するために
 # Unquoter 内で NKF を使用するようにしたもの
@@ -142,8 +147,30 @@ module ActionMailer
 
       def receive(raw_mail)
         @raw_data = raw_mail
+        @mail     = receive_without_jpmobile(raw_mail)
 
-        receive_without_jpmobile(raw_mail)
+        # 携帯かどうか判定
+        if (@mobile = Jpmobile::Email.detect(@mail.from.first).new({}) rescue nil)
+          # 携帯であれば subject は @header から直接取得して変換する
+          header = @mail.instance_variable_get(:@header)
+          subject = header["subject"].instance_variable_get(:@body)
+
+          case @mobile
+          when Jpmobile::Mobile::Docomo
+            # subject の絵文字・漢字コード変換
+            subject = $1.unpack('m').first if subject.match(Jpmobile::Emoticon::SJIS_SUBJECT_REGEXP)
+            subject = Jpmobile::Emoticon.external_to_unicodecr_docomo(subject)
+            @mail.subject = NKF.nkf("-wSx", subject)
+
+            # body の絵文字・漢字コード変換
+            body = Jpmobile::Emoticon.external_to_unicodecr_docomo(@mail.quoted_body)
+            @mail.body = NKF.nkf("-wSx", body)
+          when Jpmobile::Mobile::Au
+          when Jpmobile::Mobile::Softbank
+          end
+        end
+
+        @mail
       end
     end
   end
