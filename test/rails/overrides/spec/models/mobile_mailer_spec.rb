@@ -12,6 +12,18 @@ describe MobileMailer do
     @jis_regexp  = %r!=\?iso-2022-jp\?B\?(.+)\?=!
   end
 
+  describe "PC 宛に送るとき" do
+    it "正常に送信できること" do
+      to = "bill.gate@microsoft.com"
+      MobileMailer.deliver_message(to, "題名", "本文")
+
+      emails = ActionMailer::Base.deliveries
+      emails.size.should == 1
+      email = emails.first
+      email.to.include?(to).should be_true
+    end
+  end
+
   describe "docomo にメールを送るとき" do
     before(:each) do
       @to = "docomo@docomo.ne.jp"
@@ -193,6 +205,33 @@ describe MobileMailer do
 
       NKF.nkf("-wJx", email.subject) == @subject + "〓"
     end
+  end
+end
+
+describe MobileMailer, " mail address" do
+  before(:each) do
+    ActionMailer::Base.deliveries = []
+
+    @subject = "日本語題名"
+    @text    = "日本語テキスト"
+  end
+
+  it "ピリオドが3つ以上連続するアドレスが有効になること" do
+    to = "ruby...rails@domomo-ezweb.ne.jp"
+    MobileMailer.deliver_message(to, @subject, @text)
+
+    emails = ActionMailer::Base.deliveries
+    emails.size.should == 1
+    emails.first.to.include?(to).should be_true
+  end
+
+  it "@マークの直前にピリオドあるアドレスが有効になること" do
+    to = "ruby.rails.@domomo-ezweb.ne.jp"
+    MobileMailer.deliver_message(to, @subject, @text)
+
+    emails = ActionMailer::Base.deliveries
+    emails.size.should == 1
+    emails.first.to.include?(to).should be_true
   end
 end
 

@@ -39,4 +39,5 @@ if defined? RAILS_ENV
   Dir[File.expand_path(File.join(File.dirname(__FILE__), 'jpmobile/*.rb'))].sort.each { |lib|
     require lib
   }
+  require 'jpmobile/tmail/parser.rb'
 end

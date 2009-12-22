@@ -44,7 +44,7 @@ module ActionMailer
     def create_mail
       # メールアドレスから判定
       if recipients.is_a?(String)
-        @mobile = Jpmobile::Email.detect(recipients).new({})
+        @mobile = Jpmobile::Email.detect(recipients).new({}) rescue nil
 
         # 波ダッシュ問題の回避
         @subject = @subject.gsub(FULLWIDTH_TILDA, WAVE_DASH)

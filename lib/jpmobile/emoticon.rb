@@ -197,7 +197,7 @@ module Jpmobile
             match
           end
         when String
-          Kconv::kconv(converted, Kconv::JIS, Kconv::UTF8)
+          Kconv::kconv(converted, Kconv::SJIS, Kconv::UTF8)
         else
           match
         end
