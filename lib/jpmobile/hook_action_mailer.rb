@@ -167,7 +167,7 @@ module ActionMailer
 
             # body の絵文字・漢字コード変換
             body = Jpmobile::Emoticon.external_to_unicodecr_docomo(@mail.quoted_body)
-            @mail.body = NKF.nkf(Jpmobile::Emoticon::RECEIVE_NKF_OPTIONS[code], body)
+            @mail.body = NKF.nkf(Jpmobile::Emoticon::RECEIVE_NKF_OPTIONS[@mail.charset], body)
           when Jpmobile::Mobile::Au
             # iso-2022-jp コードを変換
 
