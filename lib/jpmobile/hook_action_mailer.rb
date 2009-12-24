@@ -178,20 +178,32 @@ module ActionMailer
 
             # body の絵文字・漢字コード変換
             body = Jpmobile::Emoticon.external_to_unicodecr_docomo(@mail.quoted_body)
-            @mail.body = NKF.nkf(Jpmobile::Emoticon::RECEIVE_NKF_OPTIONS[code.downcase], body)
+            @mail.body = NKF.nkf(Jpmobile::Emoticon::RECEIVE_NKF_OPTIONS[@mail.charset], body)
           when Jpmobile::Mobile::Au
+
           when Jpmobile::Mobile::Softbank
-            # FIXME: UNICODE で来る場合を考える
-            # shift_jis の場合
+            case @mail.charset
+            when /^shift_jis$/i
+              # subject の絵文字・漢字コード変換
+              # subject = Jpmobile::Emoticon.external_to_unicodecr_softbank(subject.unpack('m').first)
+              subject = Jpmobile::Emoticon.external_to_unicodecr_softbank_sjis(subject.unpack('m').first)
+              @mail.subject = NKF.nkf(Jpmobile::Emoticon::RECEIVE_NKF_OPTIONS[code.downcase], subject)
 
-            # subject の絵文字・漢字コード変換
-            # subject = Jpmobile::Emoticon.external_to_unicodecr_softbank(subject.unpack('m').first)
-            subject = Jpmobile::Emoticon.external_to_unicodecr_softbank_sjis(subject.unpack('m').first)
-            @mail.subject = NKF.nkf(Jpmobile::Emoticon::RECEIVE_NKF_OPTIONS[code.downcase], subject)
+              # body の絵文字・漢字コード変換
+              body = Jpmobile::Emoticon.external_to_unicodecr_softbank_sjis(@mail.quoted_body)
+              @mail.body = NKF.nkf(Jpmobile::Emoticon::RECEIVE_NKF_OPTIONS[@mail.charset], body)
+            when /^utf-8$/i
+              # subject の絵文字・漢字コード変換
+              # subject = Jpmobile::Emoticon.external_to_unicodecr_softbank(subject.unpack('m').first)
+              subject = Jpmobile::Emoticon.external_to_unicodecr_softbank(subject.unpack('m').first)
+              @mail.subject = NKF.nkf(Jpmobile::Emoticon::RECEIVE_NKF_OPTIONS[code.downcase], subject)
 
-            # body の絵文字・漢字コード変換
-            body = Jpmobile::Emoticon.external_to_unicodecr_softbank_sjis(@mail.quoted_body)
-            @mail.body = NKF.nkf(Jpmobile::Emoticon::RECEIVE_NKF_OPTIONS[code.downcase], body)
+              # body の絵文字・漢字コード変換
+              body = Jpmobile::Emoticon.external_to_unicodecr_softbank(@mail.quoted_body)
+              @mail.body = NKF.nkf(Jpmobile::Emoticon::RECEIVE_NKF_OPTIONS[@mail.charset], body)
+            else
+              # 何もしない
+            end
           end
         end
 
