@@ -178,9 +178,18 @@ module ActionMailer
 
             # body の絵文字・漢字コード変換
             body = Jpmobile::Emoticon.external_to_unicodecr_docomo(@mail.quoted_body)
-            @mail.body = NKF.nkf(Jpmobile::Emoticon::RECEIVE_NKF_OPTIONS[@mail.charset], body)
+            @mail.body = NKF.nkf(Jpmobile::Emoticon::RECEIVE_NKF_OPTIONS[code], body)
           when Jpmobile::Mobile::Au
+            # iso-2022-jp コードを変換
 
+            # subject の絵文字・漢字コード変換
+            subject = Jpmobile::Emoticon.external_to_unicodecr_au_mail(subject.unpack('m').first)
+            @mail.subject = NKF.nkf(Jpmobile::Emoticon::RECEIVE_NKF_OPTIONS[code.downcase], subject)
+
+            # body の絵文字・漢字コード変換
+            # @mail.charset が iso-2022-jp なので無理に変換すると TMail 側で変換されてしまうので，漢字コードはそのまま
+            body = Jpmobile::Emoticon.external_to_unicodecr_au_mail(@mail.quoted_body)
+            @mail.body = body
           when Jpmobile::Mobile::Softbank
             case @mail.charset
             when /^shift_jis$/i

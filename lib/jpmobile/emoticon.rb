@@ -39,6 +39,14 @@ module Jpmobile
         unicode ? ("&#x%04x;"%unicode) : match
       end
     end
+    def self.external_to_unicodecr_au_mail(str)
+      str.gsub(AU_EMAILJIS_REGEXP) do |match|
+        sjis = match.unpack('n').first
+        unicode = AU_EMAILJIS_TO_UNICODE[sjis]
+        unicode ? ("\x1b\x28\x42&#x%04x;\x1b\x24\x42"%unicode) : match
+        # unicode ? ("&#x%04x;"%unicode) : match
+      end
+    end
 
     # +str+のなかでUTF8のSoftBank絵文字を(+0x1000だけシフトして)Unicode数値文字参照に変換した文字列を返す。
     def self.external_to_unicodecr_softbank(str)

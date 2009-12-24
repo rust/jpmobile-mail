@@ -255,25 +255,47 @@ describe MobileMailer, "receiving" do
     end
   end
 
-  # describe "au からのメールを受信するとき" do
-  #   before(:each) do
-  #     @email = open(Rails.root + "spec/fixtures/mobile_mailer/au-emoji.eml").read
-  #   end
+  describe "au からのメールを受信するとき" do
+    describe "jpmobile で送信したメールの場合" do
+      before(:each) do
+        @email = open(Rails.root + "spec/fixtures/mobile_mailer/au-emoji.eml").read
+      end
 
-  #   it "漢字コードを適切に変換できること" do
-  #     email = MobileMailer.receive(@email)
+      it "漢字コードを適切に変換できること" do
+        email = MobileMailer.receive(@email)
 
-  #     email.subject.should match(/題名/)
-  #     email.body.should match(/本文/)
-  #   end
+        email.subject.should match(/題名/)
+        email.body.should match(/本文/)
+      end
 
-  #   it "絵文字が数値参照に変わること" do
-  #     email = MobileMailer.receive(@email)
+      it "絵文字が数値参照に変わること" do
+        email = MobileMailer.receive(@email)
 
-  #     email.subject.should match(/&#xe676;/)
-  #     email.subject.should match(/&#xe6e2;/)
-  #   end
-  # end
+        email.subject.should match(/&#xe503;/)
+        email.body.should match(/&#xe522;/)
+      end
+    end
+
+    describe "実機からのメールの場合" do
+      before(:each) do
+        @email = open(Rails.root + "spec/fixtures/mobile_mailer/au-emoji2.eml").read
+      end
+
+      it "漢字コードを適切に変換できること" do
+        email = MobileMailer.receive(@email)
+
+        email.subject.should match(/題名/)
+        email.body.should match(/本文/)
+      end
+
+      it "絵文字が数値参照に変わること" do
+        email = MobileMailer.receive(@email)
+
+        email.subject.should match(/&#xe4f4;/)
+        email.body.should match(/&#xe471;/)
+      end
+    end
+  end
 
   describe "softbank からのメールを受信するとき" do
     describe "shift_jis のとき" do
