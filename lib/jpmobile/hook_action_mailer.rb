@@ -103,27 +103,27 @@ module ActionMailer
 
         def encoded
           if @mobile
-            @jpm_subject = NKF.nkf(@nkf_opts, self.subject)
-            @jpm_subject = Jpmobile::Emoticon.unicodecr_to_email(@jpm_subject, @mobile)
-            @jpm_subject = "=?#{@mail_encode}?B?" + [@jpm_subject].pack("m").delete("\r\n") + "?="
+            jpm_subject = NKF.nkf(@nkf_opts, self.subject)
+            jpm_subject = Jpmobile::Emoticon.unicodecr_to_email(jpm_subject, @mobile)
+            jpm_subject = "=?#{@mail_encode}?B?" + [jpm_subject].pack("m").delete("\r\n") + "?="
 
             case @mobile
             when Jpmobile::Mobile::Au, Jpmobile::Mobile::Vodafone, Jpmobile::Mobile::Jphone
-              @jpm_body = self.quoted_body
+              jpm_body = self.quoted_body
               self.charset = @mail_encode
 
               # AU は iso-2022-jp なのでそのまま
-              self.subject = @jpm_subject
+              self.subject = jpm_subject
             else
-              @jpm_body = self.body
+              jpm_body = self.body
               self.charset = @mail_encode
 
-              self.header["subject"].instance_variable_set(:@body, @jpm_subject)
+              self.header["subject"].instance_variable_set(:@body, jpm_subject)
             end
 
-            @jpm_body = NKF.nkf(@nkf_opts, @jpm_body)
-            @jpm_body = Jpmobile::Emoticon.unicodecr_to_email(@jpm_body, @mobile)
-            self.body    = @jpm_body
+            jpm_body = NKF.nkf(@nkf_opts, jpm_body)
+            jpm_body = Jpmobile::Emoticon.unicodecr_to_email(jpm_body, @mobile)
+            self.body    = jpm_body
           end
 
           encoded_without_jpmobile
@@ -134,14 +134,6 @@ module ActionMailer
       @mail.emoji_convert(@jpm_encode, @jpm_encode, @to_sjis, @mobile)
 
       @mail
-    end
-
-    # deliver
-    alias :deliver_without_jpmobile! :deliver!
-
-    def deliver!(mail = @mail)
-      r = deliver_without_jpmobile!(mail)
-      r
     end
 
     # receive

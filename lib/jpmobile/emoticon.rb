@@ -41,8 +41,8 @@ module Jpmobile
     end
     def self.external_to_unicodecr_au_mail(str)
       str.gsub(AU_EMAILJIS_REGEXP) do |match|
-        sjis = match.unpack('n').first
-        unicode = AU_EMAILJIS_TO_UNICODE[sjis]
+        jis = match.unpack('n').first
+        unicode = AU_EMAILJIS_TO_UNICODE[jis]
         unicode ? ("\x1b\x28\x42&#x%04x;\x1b\x24\x42"%unicode) : match
       end
     end
