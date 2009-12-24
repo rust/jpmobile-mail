@@ -16,9 +16,6 @@ Jpmobile::Emoticon::RECEIVE_NKF_OPTIONS = {
 
 Jpmobile::Emoticon::SUBJECT_REGEXP = %r!=\?(shift[_-]jis|iso-2022-jp|euc-jp|utf-8)\?B\?(.+)\?=!i
 
-Jpmobile::Emoticon::SJIS_SUBJECT_REGEXP = %r!=\?shift_jis\?B\?([a-z0-9+\/=]+)\?=!i
-Jpmobile::Emoticon::JIS_SUBJECT_REGEXP  = %r!=\?iso-2022-jp\?B\?(.+)\?=!i
-
 # convert_to で機種依存文字や絵文字に対応するために
 # Unquoter 内で NKF を使用するようにしたもの
 module TMail

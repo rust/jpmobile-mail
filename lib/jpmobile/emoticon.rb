@@ -44,7 +44,6 @@ module Jpmobile
         sjis = match.unpack('n').first
         unicode = AU_EMAILJIS_TO_UNICODE[sjis]
         unicode ? ("\x1b\x28\x42&#x%04x;\x1b\x24\x42"%unicode) : match
-        # unicode ? ("&#x%04x;"%unicode) : match
       end
     end
 
