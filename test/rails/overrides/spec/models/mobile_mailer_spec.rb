@@ -283,6 +283,15 @@ describe MobileMailer, " mail address" do
     emails.size.should == 1
     emails.first.to.include?(to).should be_true
   end
+
+  it "ピリオドから始まるアドレスが有効になること" do
+    to = ".ruby.rails.@domomo-ezweb.ne.jp"
+    MobileMailer.deliver_message(to, @subject, @text)
+
+    emails = ActionMailer::Base.deliveries
+    emails.size.should == 1
+    emails.first.to.include?(to).should be_true
+  end
 end
 
 describe MobileMailer, "receiving" do

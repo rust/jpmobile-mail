@@ -16,9 +16,9 @@ Jpmobile::Emoticon::RECEIVE_NKF_OPTIONS = {
 
 Jpmobile::Emoticon::SUBJECT_REGEXP = %r!=\?(shift[_-]jis|iso-2022-jp|euc-jp|utf-8)\?B\?(.+)\?=!i
 
-# convert_to で機種依存文字や絵文字に対応するために
-# Unquoter 内で NKF を使用するようにしたもの
 module TMail
+  # convert_to で機種依存文字や絵文字に対応するために
+  # Unquoter 内で NKF を使用するようにしたもの
   class Unquoter
     class << self
       # http://www.kbmj.com/~shinya/rails_seminar/slides/#(30)
@@ -37,6 +37,50 @@ module TMail
       end
 
       alias_method_chain :convert_to, :nkf
+    end
+  end
+
+  # ピリオドが3つ以上連続する場合やピリオドから始まるアドレス対策
+  # RFC 違反であるが利用されているので対策する
+  class Mail
+    alias_method :processed_destinations, :destinations
+
+    def destinations(default = nil)
+      ret = processed_destinations(default)
+      if ret.nil? || ret.empty?
+        ary = []
+        %w(to cc bcc).each do |var_name|
+          if @unmodified_header[var_name.to_sym].kind_of?(Array)
+            ary << @unmodified_header[var_name.to_sym]
+          end
+        end
+        ary
+      else
+        ret
+      end
+    end
+
+    %w(to cc bcc).each do |var_name|
+      class_eval <<-END_CLASS_EVAL
+        alias_method :"processed_#{var_name}=", :"#{var_name}="
+        def #{var_name}=(*strs)
+          self.processed_#{var_name} = strs
+          @unmodified_header ||= {}
+          @unmodified_header[:#{var_name}] = strs
+        end
+
+        alias_method :processed_#{var_name}, :#{var_name}
+        def #{var_name}(default = nil)
+          ret = processed_#{var_name}
+          if ret
+            ret
+          elsif @unmodified_header
+            @unmodified_header[:#{var_name}]
+          else
+            nil
+          end
+        end
+      END_CLASS_EVAL
     end
   end
 end
