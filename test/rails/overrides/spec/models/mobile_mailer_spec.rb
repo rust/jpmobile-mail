@@ -273,6 +273,7 @@ describe MobileMailer, " mail address" do
     emails = ActionMailer::Base.deliveries
     emails.size.should == 1
     emails.first.to.include?(to).should be_true
+    emails.first.destinations.include?(to).should be_true
   end
 
   it "@マークの直前にピリオドあるアドレスが有効になること" do
@@ -282,6 +283,7 @@ describe MobileMailer, " mail address" do
     emails = ActionMailer::Base.deliveries
     emails.size.should == 1
     emails.first.to.include?(to).should be_true
+    emails.first.destinations.include?(to).should be_true
   end
 
   it "ピリオドから始まるアドレスが有効になること" do
@@ -291,6 +293,7 @@ describe MobileMailer, " mail address" do
     emails = ActionMailer::Base.deliveries
     emails.size.should == 1
     emails.first.to.include?(to).should be_true
+    emails.first.destinations.include?(to).should be_true
   end
 
   it "複数のアドレスが有効になること" do
@@ -300,6 +303,7 @@ describe MobileMailer, " mail address" do
     emails = ActionMailer::Base.deliveries
     emails.size.should == 1
     emails.first.to.should == to
+    emails.first.destinations.should == to
   end
 end
 

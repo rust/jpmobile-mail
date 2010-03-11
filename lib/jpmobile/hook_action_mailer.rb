@@ -50,8 +50,8 @@ module TMail
       if ret.nil? || ret.empty?
         ary = []
         %w(to cc bcc).each do |var_name|
-          if @unmodified_header[var_name.to_sym].kind_of?(Array)
-            ary += @unmodified_header[var_name.to_sym]
+          if @unmodified_header[var_name.to_sym]
+            ary += [@unmodified_header[var_name.to_sym]].flatten
           end
         end
         ary
