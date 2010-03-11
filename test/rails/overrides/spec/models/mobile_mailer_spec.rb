@@ -36,10 +36,34 @@ describe MobileMailer do
       email.quoted_body.should match(Regexp.compile(Regexp.escape(NKF.nkf("-jW", "本文"), "s"), nil, "s"))
     end
 
-    it "通常は utf-8 に変換されること" do
+    it "通常は utf-8 になること" do
       to = "bill.gate@microsoft.com"
       ActionMailer::Base.convert_pc_mail = nil
       MobileMailer.deliver_message(to, "題名", "本文")
+
+      emails = ActionMailer::Base.deliveries
+      emails.size.should == 1
+      email = emails.first
+
+      email.subject.should == "題名"
+      email.body.should match(/本文/)
+    end
+
+    it "複数に配信するときも，設定によって jis に変換されること" do
+      ActionMailer::Base.convert_pc_mail = true
+      MobileMailer.deliver_message(@to, "題名", "本文")
+
+      emails = ActionMailer::Base.deliveries
+      emails.size.should == 1
+      email = emails.first
+
+      email.quoted_subject.should == NKF.nkf("-jW", "題名")
+      email.quoted_body.should match(Regexp.compile(Regexp.escape(NKF.nkf("-jW", "本文"), "s"), nil, "s"))
+    end
+
+    it "複数に配信するときも，通常は utf-8 になること" do
+      ActionMailer::Base.convert_pc_mail = nil
+      MobileMailer.deliver_message(@to, "題名", "本文")
 
       emails = ActionMailer::Base.deliveries
       emails.size.should == 1

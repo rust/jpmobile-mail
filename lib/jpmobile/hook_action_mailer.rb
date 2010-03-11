@@ -86,6 +86,14 @@ module ActionMailer
           end
           @mobile = nil
         end
+      elsif recipients.is_a?(Array)
+        # 複数送信先の場合
+        if @@convert_pc_mail
+          @subject = NKF.nkf("-jW", @subject)
+          @body    = NKF.nkf("-jW", @body)
+          @charset = "iso-2022-jp"
+        end
+        @mobile = nil
       end
 
       create_mail_without_jpmobile
