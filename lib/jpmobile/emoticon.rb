@@ -39,6 +39,7 @@ module Jpmobile
         unicode ? ("&#x%04x;"%unicode) : match
       end
     end
+    # +str+ のなかでau絵文字をUnicode数値文字参照に置換した文字列を返す。(メール専用)
     def self.external_to_unicodecr_au_mail(str)
       str.gsub(AU_EMAILJIS_REGEXP) do |match|
         jis = match.unpack('n').first
