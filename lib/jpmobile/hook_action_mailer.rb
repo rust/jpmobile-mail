@@ -49,6 +49,8 @@ module ActionMailer
     alias :create_without_jpmobile! :create!
     alias :create_mail_without_jpmobile :create_mail
 
+    cattr_accessor :convert_pc_mail
+
     def create_mail
       # メールアドレスから判定
       if recipients.is_a?(String)
@@ -76,8 +78,12 @@ module ActionMailer
           @jpm_encode = "shift_jis"
           @to_sjis    = true
         else
-          # 上記以外は iso-2022-jp で送信する
-          @charset = "iso-2022-jp"
+          # 上記以外で convert_pc_mail が設定されていれば iso-2022-jp で送信する
+          if @@convert_pc_mail
+            @subject = NKF.nkf("-jW", @subject)
+            @body    = NKF.nkf("-jW", @body)
+            @charset = "iso-2022-jp"
+          end
           @mobile = nil
         end
       end

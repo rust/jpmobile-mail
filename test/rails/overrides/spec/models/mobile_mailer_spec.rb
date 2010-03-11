@@ -22,6 +22,32 @@ describe MobileMailer do
       email = emails.first
       email.to.include?(to).should be_true
     end
+
+    it "設定(convert_pc_mail)によって jis に変換されること" do
+      to = "bill.gate@microsoft.com"
+      ActionMailer::Base.convert_pc_mail = true
+      MobileMailer.deliver_message(to, "題名", "本文")
+
+      emails = ActionMailer::Base.deliveries
+      emails.size.should == 1
+      email = emails.first
+
+      email.quoted_subject.should == NKF.nkf("-jW", "題名")
+      email.quoted_body.should match(Regexp.compile(Regexp.escape(NKF.nkf("-jW", "本文"), "s"), nil, "s"))
+    end
+
+    it "通常は utf-8 に変換されること" do
+      to = "bill.gate@microsoft.com"
+      ActionMailer::Base.convert_pc_mail = nil
+      MobileMailer.deliver_message(to, "題名", "本文")
+
+      emails = ActionMailer::Base.deliveries
+      emails.size.should == 1
+      email = emails.first
+
+      email.subject.should == "題名"
+      email.body.should match(/本文/)
+    end
   end
 
   describe "docomo にメールを送るとき" do
