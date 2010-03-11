@@ -51,7 +51,7 @@ module TMail
         ary = []
         %w(to cc bcc).each do |var_name|
           if @unmodified_header[var_name.to_sym].kind_of?(Array)
-            ary << @unmodified_header[var_name.to_sym]
+            ary += @unmodified_header[var_name.to_sym]
           end
         end
         ary
@@ -64,9 +64,9 @@ module TMail
       class_eval <<-END_CLASS_EVAL
         alias_method :"processed_#{var_name}=", :"#{var_name}="
         def #{var_name}=(*strs)
-          self.processed_#{var_name} = strs
+          self.processed_#{var_name} = *strs
           @unmodified_header ||= {}
-          @unmodified_header[:#{var_name}] = strs
+          @unmodified_header[:#{var_name}] = *strs
         end
 
         alias_method :processed_#{var_name}, :#{var_name}
