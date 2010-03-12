@@ -170,7 +170,7 @@ describe MobileMailer do
       @to = "softbank@softbank.ne.jp"
     end
 
-    it "subject が Shift_JIS になること" do
+    it "subject/body が Shift_JIS になること" do
       mail = MobileMailer.deliver_message(@to, @subject, @text)
 
       emails = ActionMailer::Base.deliveries
@@ -178,18 +178,9 @@ describe MobileMailer do
       email = emails.first
       email.body.should match(/For softbank/)
 
-      NKF.nkf("-w", email.subject).should == @subject
-    end
+      email.quoted_subject.match(@sjis_regexp)
+      $1.unpack("m").first.should == NKF.nkf("-sW", @subject)
 
-    it "body が Shift_JIS になること" do
-      mail = MobileMailer.deliver_message(@to, @subject, @text)
-
-      emails = ActionMailer::Base.deliveries
-      emails.size.should == 1
-      email = emails.first
-      email.body.should match(/For softbank/)
-
-      email.body.should match(/For softbank/)
       email.quoted_body.should match(/#{NKF.nkf("-sWx", @text)}/)
     end
 
@@ -227,15 +218,6 @@ describe MobileMailer do
       email.quoted_body.should match(/For vodafone/)
 
       NKF.nkf('-w', email.subject).should == @subject
-    end
-
-    it "body が JIS になること" do
-      mail = MobileMailer.deliver_message(@to, @subject, @text)
-
-      emails = ActionMailer::Base.deliveries
-      emails.size.should == 1
-      email = emails.first
-      email.quoted_body.should match(/For vodafone/)
 
       NKF.nkf('-w', email.quoted_body).should match(/#{@text}/)
     end
