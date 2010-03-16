@@ -307,6 +307,19 @@ describe MobileMailer, "receiving" do
       email.subject.should match(/&#xe676;/)
       email.body.should match(/&#xe6e2;/)
     end
+
+    describe "jis コードの場合に" do
+      before(:each) do
+        @email = open(Rails.root + "spec/fixtures/mobile_mailer/docomo-jis.eml").read
+      end
+
+      it "適切に変換できること" do
+        email = MobileMailer.receive(@email)
+
+        email.subject.should match(/テスト/)
+        email.body.should match(/テスト本文/)
+      end
+    end
   end
 
   describe "au からのメールを受信するとき" do

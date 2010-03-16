@@ -13,6 +13,12 @@ Jpmobile::Emoticon::RECEIVE_NKF_OPTIONS = {
   "euc-jp"      => "-wE",
   "utf-8"       => "-wW",
 }
+Jpmobile::Emoticon::NKF_CONSTANTS = {
+  "shift_jis"   => NKF::SJIS,
+  "iso-2022-jp" => NKF::JIS,
+  "euc-jp"      => NKF::EUC,
+  "utf-8"       => NKF::UTF8,
+}
 
 Jpmobile::Emoticon::SUBJECT_REGEXP = %r!=\?(shift[_-]jis|iso-2022-jp|euc-jp|utf-8)\?B\?(.+)\?=!i
 
@@ -211,7 +217,16 @@ module ActionMailer
             code    = $1
             subject = $2
           else
-            code    = nil
+            code = case NKF.guess(subject)
+                   when NKF::JIS
+                     "iso-2022-jp"
+                   when NKF::EUC
+                     "euc-jp"
+                   when NKF::SJIS
+                     "shift_jis"
+                   when NKF::UTF8
+                     "utf-8"
+                   end
           end
 
           # FIXME: 漢字コード決めうちなので汎用的な方法に変更
@@ -226,6 +241,7 @@ module ActionMailer
             # body の絵文字・漢字コード変換
             body = Jpmobile::Emoticon.external_to_unicodecr_docomo(@mail.quoted_body)
             @mail.body = NKF.nkf(Jpmobile::Emoticon::RECEIVE_NKF_OPTIONS[@mail.charset], body)
+            @mail.charset = "utf-8"
           when Jpmobile::Mobile::Au
             # iso-2022-jp コードを変換
 
@@ -248,6 +264,7 @@ module ActionMailer
               # body の絵文字・漢字コード変換
               body = Jpmobile::Emoticon.external_to_unicodecr_softbank_sjis(@mail.quoted_body)
               @mail.body = NKF.nkf(Jpmobile::Emoticon::RECEIVE_NKF_OPTIONS[@mail.charset], body)
+              @mail.charset = "utf-8"
             when /^utf-8$/i
               # subject の絵文字・漢字コード変換
               # subject = Jpmobile::Emoticon.external_to_unicodecr_softbank(subject.unpack('m').first)
@@ -257,6 +274,7 @@ module ActionMailer
               # body の絵文字・漢字コード変換
               body = Jpmobile::Emoticon.external_to_unicodecr_softbank(@mail.quoted_body)
               @mail.body = NKF.nkf(Jpmobile::Emoticon::RECEIVE_NKF_OPTIONS[@mail.charset], body)
+              @mail.charset = "utf-8"
             else
               # 何もしない
             end
