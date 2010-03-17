@@ -27,53 +27,70 @@ namespace :test do
   end
   desc "Generate rails app and run jpmobile tests in the app"
   task :rails, [:versions] do |t, args|
-    rails_root     = "test/rails/rails_root"
-    relative_root  = "../../../"
     rails_versions = args.versions.split("/") rescue ["2.3.5"]
-
-    puts "Running tests in Rails #{rails_versions.join(', ')}"
-
     rails_versions.each do |rails_version|
-      puts "  for #{rails_version}"
-      # generate rails app
-      FileUtils.rm_rf(rails_root)
-      FileUtils.mkdir_p(rails_root)
-      system "rails _#{rails_version}_ --force #{rails_root}"
+      Rake::Task["test:prepare"].invoke(rails_version)
+      Rake::Task["test:spec"].invoke(rails_version)
+    end
+  end
 
-      # setup jpmobile
-      plugin_path = File.join(rails_root, 'vendor', 'plugins', 'jpmobile')
-      FileUtils.mkdir_p(plugin_path)
-      FileList["*"].exclude("test").each do |file|
-        FileUtils.cp_r(file, plugin_path)
-      end
+  desc "Generate rails app"
+  task :prepare, [:rails_version] do |t, args|
+    rails_version = args.rails_version || "2.3.5"
+    rails_root    = "test/rails/rails_root"
+    relative_root = "../../../"
 
-      # setup tests
-      FileList["test/rails/overrides/*"].each do |file|
+    puts "Building Rails application in #{rails_version}"
+    # generate rails app
+    FileUtils.rm_rf(rails_root)
+    FileUtils.mkdir_p(rails_root)
+    system "rails _#{rails_version}_ --force #{rails_root}"
+
+    # setup jpmobile
+    plugin_path = File.join(rails_root, 'vendor', 'plugins', 'jpmobile')
+    FileUtils.mkdir_p(plugin_path)
+    FileList["*"].exclude("test").each do |file|
+      FileUtils.cp_r(file, plugin_path)
+    end
+
+    # setup tests
+    FileList["test/rails/overrides/*"].each do |file|
+      FileUtils.cp_r(file, rails_root)
+    end
+
+    # for 2.3.2
+    if rails_version == "2.3.2"
+      FileList["test/rails/2.3.2/*"].each do |file|
         FileUtils.cp_r(file, rails_root)
       end
-
-      # for 2.3.2
-      if rails_version == "2.3.2"
-        FileList["test/rails/2.3.2/*"].each do |file|
-          FileUtils.cp_r(file, rails_root)
-        end
-      end
-
-      # for cookie_only option
-      config_path = File.join(rails_root, 'config', 'environment.rb')
-      File.open(config_path, 'a') do |file|
-        file.write <<-END
-
-ActionController::Base.session = {:key => "_session_id", :cookie_only => false}
-END
-      end
-
-      # run tests in rails
-      cd rails_root
-      sh "rake db:migrate"
-      sh "rake spec"
-
-      cd relative_root
     end
+    # for cookie_only option
+    config_path = File.join(rails_root, 'config', 'environment.rb')
+    File.open(config_path, 'a') do |file|
+      file.write <<-END
+
+ActionController::Base.session = {
+  :secret      => "1234567890",
+  :key         => "_session_id",
+  :cookie_only => false
+}
+END
+    end
+  end
+
+  desc "Run jpmobile tests in the app"
+  task :spec, [:versions] do |t, args|
+    rails_version = args.rails_version || "2.3.5"
+    rails_root    = "test/rails/rails_root"
+    relative_root = "../../../"
+
+    puts "Run spec in #{rails_version}"
+    puts pwd
+
+    cd rails_root
+    sh "rake db:migrate"
+    sh "rake spec"
+
+    cd relative_root
   end
 end

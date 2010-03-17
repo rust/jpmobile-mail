@@ -27,6 +27,9 @@ module Jpmobile
 
     SOFTBANK_SJIS_REGEXP = Regexp.union(*SOFTBANK_SJIS_TO_UNICODE.keys.map{|s| Regexp.compile(Regexp.escape([s].pack('n'),"s"),nil,'s')}).freeze
 
-    AU_EMAILJIS_REGEXP = Regexp.union(*AU_EMAILJIS_TO_UNICODE.keys.map{|s| Regexp.compile(Regexp.escape([s].pack('n'),"s"),nil,'s')})
+    AU_EMAILJIS_REGEXP = Regexp.union(*AU_EMAILJIS_TO_UNICODE.keys.map{|s| Regexp.compile(Regexp.escape([s].pack('n'),"j"),nil,'j')})
+    # AU_EMAILJIS_REGEXP = /(.+?)\c[\$B([\s\S]+?)\c[(\(B|\(J|\$@|\$B)([\s\S]+)/
+    # AU_EMAILJIS_REGEXP = Regexp.union(*AU_EMAILJIS_TO_UNICODE.keys.map{|s| s.unpack("H*")})
+    # AU_EMAILJIS_REGEXP = Regexp.union(*AU_EMAILJIS_TO_UNICODE.keys.map{|s| Regexp.compile("%X" % s, nil, 'j')})
   end
 end
