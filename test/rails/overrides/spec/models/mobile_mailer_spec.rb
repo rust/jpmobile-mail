@@ -32,8 +32,21 @@ describe MobileMailer do
       emails.size.should == 1
       email = emails.first
 
-      email.quoted_subject.should == NKF.nkf("-jW", "題名")
-      email.quoted_body.should match(Regexp.compile(Regexp.escape(NKF.nkf("-jW", "本文"), "s"), nil, "s"))
+      email.quoted_subject.should match(/#{Regexp.escape(NKF.nkf("-jWM", "題名"))}/i)
+      email.quoted_body.should match(/#{Regexp.escape(NKF.nkf("-jW", "本文"))}/)
+    end
+
+    it "絵文字がゲタ(〓)に変換されること" do
+      to = "bill.gate@microsoft.com"
+      ActionMailer::Base.convert_pc_mail = true
+      MobileMailer.deliver_message(to, "題名&#xe676;", "本文&#xe68b;")
+
+      emails = ActionMailer::Base.deliveries
+      emails.size.should == 1
+      email = emails.first
+
+      NKF.nkf("-m", email.quoted_subject).should == NKF.nkf("-m", "題名〓")
+      NKF.nkf("-Jw", email.quoted_body).should match(/〓/)
     end
 
     it "通常は utf-8 になること" do
@@ -57,8 +70,8 @@ describe MobileMailer do
       emails.size.should == 1
       email = emails.first
 
-      email.quoted_subject.should == NKF.nkf("-jW", "題名")
-      email.quoted_body.should match(Regexp.compile(Regexp.escape(NKF.nkf("-jW", "本文"), "s"), nil, "s"))
+      email.quoted_subject.should match(/#{Regexp.escape(NKF.nkf("-jWM", "題名"))}/i)
+      email.quoted_body.should match(/#{Regexp.escape(NKF.nkf("-jW", "本文"))}/)
     end
 
     it "複数に配信するときも，通常は utf-8 になること" do
