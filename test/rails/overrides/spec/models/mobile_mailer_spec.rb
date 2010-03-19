@@ -348,37 +348,37 @@ describe MobileMailer do
       end
     end
 
-    # describe "softbank の場合" do
-    #   before(:each) do
-    #     @to     = "softbank@softbank.ne.jp"
-    #   end
+    describe "softbank の場合" do
+      before(:each) do
+        @to     = "softbank@softbank.ne.jp"
+      end
 
-    #   it "漢字コードが変換されること" do
-    #     MobileMailer.deliver_multi_message(@to, @subject, @html, @plain, @from)
+      it "漢字コードが変換されること" do
+        MobileMailer.deliver_multi_message(@to, @subject, @html, @plain, @from)
 
-    #     emails = ActionMailer::Base.deliveries
-    #     emails.size.should == 1
-    #     email = emails.first
+        emails = ActionMailer::Base.deliveries
+        emails.size.should == 1
+        email = emails.first
 
-    #     email.parts.size.should == 2
-    #     email.parts.first.quoted_body.unpack("m").first.should match(Regexp.compile(Regexp.escape(NKF.nkf("-sWx", @html), 's'), nil, 's'))
-    #     email.parts.last.quoted_body.should match(/#{Regexp.escape(NKF.nkf("-sWx", @plain))}/)
-    #   end
+        email.parts.size.should == 2
+        email.parts.first.quoted_body.unpack("m").first.should match(Regexp.compile(Regexp.escape(NKF.nkf("-sWx", @html), 's'), nil, 's'))
+        email.parts.last.quoted_body.should match(/#{Regexp.escape(NKF.nkf("-sWx", @plain))}/)
+      end
 
-    #   it "絵文字が変換されること" do
-    #     @html  += "&#xe68b;"
-    #     @plain += "&#xe676;"
-    #     MobileMailer.deliver_multi_message(@to, @subject, @html, @plain, @from)
+      it "絵文字が変換されること" do
+        @html  += "&#xe68a;"
+        @plain += "&#xe676;"
+        MobileMailer.deliver_multi_message(@to, @subject, @html, @plain, @from)
 
-    #     emails = ActionMailer::Base.deliveries
-    #     emails.size.should == 1
-    #     email = emails.first
+        emails = ActionMailer::Base.deliveries
+        emails.size.should == 1
+        email = emails.first
 
-    #     email.parts.size.should == 2
-    #     email.parts.first.quoted_body.unpack("m").first.should match(Regexp.compile(Regexp.escape([0xf8ec].pack('n'), 's'), nil, 's'))
-    #     email.parts.last.quoted_body.should match(Regexp.compile(Regexp.escape([0xf8d7].pack('n'), 's'), nil, 's'))
-    #   end
-    # end
+        email.parts.size.should == 2
+        email.parts.first.quoted_body.unpack("m").first.should match(Regexp.compile(Regexp.escape([0xf76a].pack('n'), 's'), nil, 's'))
+        email.parts.last.quoted_body.should match(Regexp.compile(Regexp.escape([0xf97c].pack('n'), 's'), nil, 's'))
+      end
+    end
   end
 end
 
