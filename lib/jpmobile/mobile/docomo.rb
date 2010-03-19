@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # =DoCoMo携帯電話
 
 module Jpmobile::Mobile
@@ -78,6 +79,12 @@ module Jpmobile::Mobile
     def supports_cookie?
       false
     end
+
+    # メールエンコーディング情報
+    def mail_encoding
+      ["shift_jis", true] # shift_jis 変換
+    end
+
     private
     # モデル名を返す。
     def model_name

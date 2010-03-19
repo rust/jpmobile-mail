@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # =SoftBank携帯電話
 # J-PHONE, Vodafoneを含む
 
@@ -67,7 +68,13 @@ module Jpmobile::Mobile
     def supports_cookie?
       true
     end
+
+    # メールエンコーディング情報
+    def mail_encoding
+      ["shift_jis", true] # shift_jis 変換
+    end
   end
+
   # ==Vodafone 3G携帯電話(J-PHONE, SoftBank含まず)
   # スーパクラスはSoftbank。
   class Vodafone < Softbank
@@ -80,7 +87,13 @@ module Jpmobile::Mobile
     def supports_cookie?
       true
     end
+
+    # メールエンコーディング情報
+    def mail_encoding
+      ["iso-2022-jp", false] # jis 変換
+    end
   end
+
   # ==SoftBank 2G携帯電話(J-PHONE/Vodafone 2G)
   # スーパクラスはVodafone。
   class Jphone < Vodafone
@@ -105,6 +118,11 @@ module Jpmobile::Mobile
     # cookieに対応しているか？
     def supports_cookie?
       false
+    end
+
+    # メールエンコーディング情報
+    def mail_encoding
+      ["iso-2022-jp", false] # jis 変換
     end
   end
 end

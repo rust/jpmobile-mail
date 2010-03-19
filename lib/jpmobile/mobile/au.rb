@@ -99,5 +99,10 @@ module Jpmobile::Mobile
         true
       end
     end
+
+    # メールエンコーディング情報
+    def mail_encoding
+      ["iso-2022-jp", false] # jis 変換
+    end
   end
 end
