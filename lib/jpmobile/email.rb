@@ -196,15 +196,37 @@ module Jpmobile
     def self.prepare_receive_mail_body(mail, mobile)
       if mail.multipart?
         # multipart
+        mail.parts.map do |part|
+          prepare_receive_mail_body(part, mobile)
+        end
+
+        mail
       else
-        # plain mail
-        if mobile.kind_of?(Jpmobile::Mobile::Au)
-          body = mail.quoted_body.gsub(/\x1b\x24\x42(.*)\x1b\x28\x42/) do |jis|
-            Jpmobile::Emoticon.external_to_unicodecr_au_mail(jis)
+        case mail.content_type
+        when "text/plain"
+          # text/plain
+          if mobile.kind_of?(Jpmobile::Mobile::Au)
+            body = mail.quoted_body.gsub(/\x1b\x24\x42(.*)\x1b\x28\x42/) do |jis|
+              Jpmobile::Emoticon.external_to_unicodecr_au_mail(jis)
+            end
+            mail.body = NKF.nkf(Jpmobile::Email::RECEIVE_NKF_OPTIONS[mail.charset], body)
+          else
+            mail.body = mail_emoticon_to_unicodecr(mail.quoted_body, mobile, mail.charset)
           end
-          mail.body = NKF.nkf(Jpmobile::Email::RECEIVE_NKF_OPTIONS[mail.charset], body)
-        else
-          mail.body = mail_emoticon_to_unicodecr(mail.quoted_body, mobile, mail.charset)
+        when "text/html"
+          # text/html
+          body = transfer_decode(mail.quoted_body, mail.transfer_encoding)
+
+          if mobile.kind_of?(Jpmobile::Mobile::Au)
+            body = body.gsub(/\x1b\x24\x42(.*)\x1b\x28\x42/) do |jis|
+              Jpmobile::Emoticon.external_to_unicodecr_au_mail(jis)
+            end
+            mail.body = NKF.nkf(Jpmobile::Email::RECEIVE_NKF_OPTIONS[mail.charset], body)
+          else
+            mail.body = mail_emoticon_to_unicodecr(body, mobile, mail.charset)
+          end
+
+          mail.transfer_encoding = nil
         end
         mail.charset = "utf-8"
 
@@ -221,6 +243,18 @@ module Jpmobile
         str = Jpmobile::Emoticon.send(RECEIVED_CONVERSION[mobile.class], str)
       end
       NKF.nkf(Jpmobile::Email::RECEIVE_NKF_OPTIONS[code.downcase], str)
+    end
+
+    # +str+を+encoding+に応じてunpackする
+    def self.transfer_decode(str, encoding)
+      case encoding
+      when /quoted-printable/i
+        str.unpack("M*").first
+      when /base64/i
+        str.unpack("m").first
+      else
+        str
+      end
     end
 
     # メールアドレスよりキャリア情報を取得する

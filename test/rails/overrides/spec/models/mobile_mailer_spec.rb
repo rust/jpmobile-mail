@@ -612,29 +612,101 @@ describe MobileMailer, "receiving" do
     end
   end
 
-  # describe "multipart メールを受信するとき" do
-  #   describe "au の場合" do
-  #     before(:each) do
-  #       @email = open(Rails.root + "spec/fixtures/mobile_mailer/au-attached.eml").read
-  #     end
+  describe "multipart メールを受信するとき" do
+    describe "docomo の場合" do
+      before(:each) do
+        @email = open(Rails.root + "spec/fixtures/mobile_mailer/docomo-gmail-sjis.eml").read
+      end
 
-  #     it "正常に受信できること" do
-  #       lambda {
-  #         MobileMailer.receive(@email)
-  #       }.should_not raise_exception
-  #     end
+      it "正常に受信できること" do
+        lambda {
+          MobileMailer.receive(@email)
+        }.should_not raise_exception
+      end
 
-  #     it "絵文字が変換されること" do
-  #       email = MobileMailer.receive(@email)
+      it "絵文字が変換されること" do
+        email = MobileMailer.receive(@email)
 
-  #       email.subject.should match(/&#xe481;/)
-  #       email.body.should match(/&#xe4f4;/)
-  #     end
-  #   end
-  # end
+        email.subject.should match(/&#xe6ec;/)
+
+        email.parts.size.should == 1
+        email.parts.first.parts.size == 2
+
+        parts = email.parts.first.parts
+        parts.first.body.should match(/テストです&#xe72d;/)
+        parts.last.body.should match(/テストです&#xe72d;/)
+      end
+    end
+
+    describe "au の場合" do
+      before(:each) do
+        @email = open(Rails.root + "spec/fixtures/mobile_mailer/au-decomail.eml").read
+      end
+
+      it "正常に受信できること" do
+        lambda {
+          MobileMailer.receive(@email)
+        }.should_not raise_exception
+      end
+
+      it "絵文字が変換されること" do
+        email = MobileMailer.receive(@email)
+
+        email.subject.should match(/&#xe4f4;/)
+
+        email.parts.size.should == 1
+        email.parts.first.parts.size == 2
+
+        parts = email.parts.first.parts
+        parts.first.body.should match(/テストです&#xe595;/)
+        parts.last.body.should match(/テストです&#xe595;/)
+      end
+    end
+
+    describe "softbank(sjis) の場合" do
+      before(:each) do
+        @email = open(Rails.root + "spec/fixtures/mobile_mailer/softbank-gmail-sjis.eml").read
+      end
+
+      it "正常に受信できること" do
+        lambda {
+          MobileMailer.receive(@email)
+        }.should_not raise_exception
+      end
+
+      it "絵文字が変換されること" do
+        email = MobileMailer.receive(@email)
+
+        email.subject.should match(/&#xf221;&#xf223;&#xf221;/)
+
+        email.parts.size.should == 2
+
+        email.parts.first.body.should match(/テストです&#xf018;/)
+        email.parts.last.body.should match(/テストです&#xf231;/)
+      end
+    end
+
+    describe "softbank(utf8) の場合" do
+      before(:each) do
+        @email = open(Rails.root + "spec/fixtures/mobile_mailer/softbank-gmail-utf8.eml").read
+      end
+
+      it "正常に受信できること" do
+        lambda {
+          MobileMailer.receive(@email)
+        }.should_not raise_exception
+      end
+
+      it "絵文字が変換されること" do
+        email = MobileMailer.receive(@email)
+
+        email.subject.should match(/テストです&#xf221;/)
+
+        email.parts.size.should == 2
+
+        email.parts.first.body.should match(/テストです&#xf223;/)
+        email.parts.last.body.should match(/テストです&#xf223;/)
+      end
+    end
+  end
 end
-
-
-
-
-
