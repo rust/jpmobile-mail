@@ -202,10 +202,13 @@ module Jpmobile
           body = mail.quoted_body.gsub(/\x1b\x24\x42(.*)\x1b\x28\x42/) do |jis|
             Jpmobile::Emoticon.external_to_unicodecr_au_mail(jis)
           end
-          NKF.nkf(Jpmobile::Email::RECEIVE_NKF_OPTIONS[mail.charset], body)
+          mail.body = NKF.nkf(Jpmobile::Email::RECEIVE_NKF_OPTIONS[mail.charset], body)
         else
-          mail_emoticon_to_unicodecr(mail.quoted_body, mobile, mail.charset)
+          mail.body = mail_emoticon_to_unicodecr(mail.quoted_body, mobile, mail.charset)
         end
+        mail.charset = "utf-8"
+
+        mail
       end
     end
 

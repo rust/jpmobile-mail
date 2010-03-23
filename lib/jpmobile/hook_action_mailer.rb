@@ -131,8 +131,7 @@ module ActionMailer
           # 題名変換
           mail.subject = Jpmobile::Email.prepare_receive_mail_subject(mail, @mobile)
 
-          mail.body = Jpmobile::Email.prepare_receive_mail_body(mail, @mobile)
-          mail.charset = "utf-8"
+          mail = Jpmobile::Email.prepare_receive_mail_body(mail, @mobile)
         end
 
         mail.base64_decode
