@@ -23,6 +23,12 @@ module Jpmobile
 
     SUBJECT_REGEXP = %r!=\?(shift[_-]jis|iso-2022-jp|euc-jp|utf-8)\?B\?(.+)\?=!i
 
+    RECEIVED_CONVERSION = {
+      Jpmobile::Mobile::Docomo   => :external_to_unicodecr_docomo,
+      Jpmobile::Mobile::Au       => :external_to_unicodecr_au_mail,
+      Jpmobile::Mobile::Softbank => :external_to_unicodecr_softbank,
+    }
+
     # +str+内の全角のチルダ(0xff5e)を波ダッシュ(0x301c)に変換する
     def self.tilda_to_dash(str)
       str.gsub([0xff5e].pack("U"), [0x301c].pack("U"))
@@ -163,6 +169,57 @@ module Jpmobile
       Jpmobile::Emoticon.unicodecr_to_email(NKF.nkf(SEND_NKF_OPTIONS[mail_encode], str), mobile)
     end
 
+    # 受信した+mail+内の+subject+を変換する
+    def self.prepare_receive_mail_subject(mail, mobile)
+      header = mail.instance_variable_get(:@header)
+      subject = header["subject"].instance_variable_get(:@body)
+      if subject.match(SUBJECT_REGEXP)
+        code    = $1
+        subject = $2
+      else
+        code = case NKF.guess(subject)
+               when NKF::JIS
+                 "iso-2022-jp"
+               when NKF::EUC
+                 "euc-jp"
+               when NKF::SJIS
+                 "shift_jis"
+               when NKF::UTF8
+                 "utf-8"
+               end
+      end
+
+      mail_emoticon_to_unicodecr(subject.unpack('m').first, mobile, code)
+    end
+
+    # 受信した+mail+内の本文を変換する
+    def self.prepare_receive_mail_body(mail, mobile)
+      if mail.multipart?
+        # multipart
+      else
+        # plain mail
+        if mobile.kind_of?(Jpmobile::Mobile::Au)
+          body = mail.quoted_body.gsub(/\x1b\x24\x42(.*)\x1b\x28\x42/) do |jis|
+            Jpmobile::Emoticon.external_to_unicodecr_au_mail(jis)
+          end
+          NKF.nkf(Jpmobile::Email::RECEIVE_NKF_OPTIONS[mail.charset], body)
+        else
+          mail_emoticon_to_unicodecr(mail.quoted_body, mobile, mail.charset)
+        end
+      end
+    end
+
+    # +str+内の絵文字を+mobile+と+code+に応じて変換する
+    def self.mail_emoticon_to_unicodecr(str, mobile, code)
+      if mobile.kind_of?(Jpmobile::Mobile::Softbank) and code =~ /^shift_jis$/i
+        # softbank で shift_jis の場合のみ変換テーブルが特例
+        str = Jpmobile::Emoticon.send("#{RECEIVED_CONVERSION[mobile.class]}_sjis".to_sym, str)
+      else
+        str = Jpmobile::Emoticon.send(RECEIVED_CONVERSION[mobile.class], str)
+      end
+      NKF.nkf(Jpmobile::Email::RECEIVE_NKF_OPTIONS[code.downcase], str)
+    end
+
     # メールアドレスよりキャリア情報を取得する
     # _param1_:: email メールアドレス
     # return  :: Jpmobile::Mobileで定義されている携帯キャリアクラス
@@ -173,6 +230,5 @@ module Jpmobile
       end
       nil
     end
-
   end
 end

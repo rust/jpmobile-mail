@@ -128,82 +128,11 @@ module ActionMailer
         @mobile = Jpmobile::Email.detect(mail.from.first).new({}) rescue nil
 
         if @mobile
-          # 携帯であれば subject は @header から直接取得して変換する
-          header  = mail.instance_variable_get(:@header)
-          subject = header["subject"].instance_variable_get(:@body)
-          body, body_encoding = extract_body(mail)
-          mail.body    = body
-          mail.charset = body_encoding
+          # 題名変換
+          mail.subject = Jpmobile::Email.prepare_receive_mail_subject(mail, @mobile)
 
-          if subject.match(Jpmobile::Email::SUBJECT_REGEXP)
-            code    = $1
-            subject = $2
-          else
-            code = case NKF.guess(subject)
-                   when NKF::JIS
-                     "iso-2022-jp"
-                   when NKF::EUC
-                     "euc-jp"
-                   when NKF::SJIS
-                     "shift_jis"
-                   when NKF::UTF8
-                     "utf-8"
-                   end
-          end
-
-          # FIXME: 漢字コード決めうちなので汎用的な方法に変更
-          case @mobile
-          when Jpmobile::Mobile::Docomo
-            # shift_jis コードであることが前提
-
-            # subject の絵文字・漢字コード変換
-            subject = Jpmobile::Emoticon.external_to_unicodecr_docomo(subject.unpack('m').first)
-            mail.subject = NKF.nkf(Jpmobile::Email::RECEIVE_NKF_OPTIONS[code.downcase], subject)
-
-            # body の絵文字・漢字コード変換
-            body = Jpmobile::Emoticon.external_to_unicodecr_docomo(mail.quoted_body)
-            mail.body = NKF.nkf(Jpmobile::Email::RECEIVE_NKF_OPTIONS[body_encoding], body)
-            mail.charset = "utf-8"
-          when Jpmobile::Mobile::Au
-            # iso-2022-jp コードを変換
-
-            # subject の絵文字・漢字コード変換
-            subject = Jpmobile::Emoticon.external_to_unicodecr_au_mail(subject.unpack('m').first)
-            mail.subject = NKF.nkf(Jpmobile::Email::RECEIVE_NKF_OPTIONS[code.downcase], subject)
-
-            # body の絵文字・漢字コード変換
-            body = body.gsub(/\x1b\x24\x42(.*)\x1b\x28\x42/) do |jis|
-              Jpmobile::Emoticon.external_to_unicodecr_au_mail(jis)
-            end
-
-            mail.body = NKF.nkf(Jpmobile::Email::RECEIVE_NKF_OPTIONS[body_encoding], body)
-            mail.charset = "utf-8"
-          when Jpmobile::Mobile::Softbank
-            case body_encoding
-            when /^shift_jis$/i
-              # subject の絵文字・漢字コード変換
-              # subject = Jpmobile::Emoticon.external_to_unicodecr_softbank(subject.unpack('m').first)
-              subject = Jpmobile::Emoticon.external_to_unicodecr_softbank_sjis(subject.unpack('m').first)
-              mail.subject = NKF.nkf(Jpmobile::Email::RECEIVE_NKF_OPTIONS[code.downcase], subject)
-
-              # body の絵文字・漢字コード変換
-              body = Jpmobile::Emoticon.external_to_unicodecr_softbank_sjis(mail.quoted_body)
-              mail.body = NKF.nkf(Jpmobile::Email::RECEIVE_NKF_OPTIONS[body_encoding], body)
-              mail.charset = "utf-8"
-            when /^utf-8$/i
-              # subject の絵文字・漢字コード変換
-              # subject = Jpmobile::Emoticon.external_to_unicodecr_softbank(subject.unpack('m').first)
-              subject = Jpmobile::Emoticon.external_to_unicodecr_softbank(subject.unpack('m').first)
-              mail.subject = NKF.nkf(Jpmobile::Email::RECEIVE_NKF_OPTIONS[code.downcase], subject)
-
-              # body の絵文字・漢字コード変換
-              body = Jpmobile::Emoticon.external_to_unicodecr_softbank(mail.quoted_body)
-              mail.body = NKF.nkf(Jpmobile::Email::RECEIVE_NKF_OPTIONS[body_encoding], body)
-              mail.charset = "utf-8"
-            else
-              # 何もしない
-            end
-          end
+          mail.body = Jpmobile::Email.prepare_receive_mail_body(mail, @mobile)
+          mail.charset = "utf-8"
         end
 
         mail.base64_decode
