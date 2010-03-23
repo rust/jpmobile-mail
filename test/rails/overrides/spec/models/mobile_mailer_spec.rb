@@ -379,6 +379,70 @@ describe MobileMailer do
         email.parts.last.quoted_body.should match(Regexp.compile(Regexp.escape([0xf97c].pack('n'), 's'), nil, 's'))
       end
     end
+
+    describe "vodafone の場合" do
+      before(:each) do
+        @to     = "vodafone@d.vodafone.ne.jp"
+      end
+
+      it "漢字コードが変換されること" do
+        MobileMailer.deliver_multi_message(@to, @subject, @html, @plain, @from)
+
+        emails = ActionMailer::Base.deliveries
+        emails.size.should == 1
+        email = emails.first
+
+        email.parts.size.should == 2
+        NKF.nkf("-mQ", email.parts.first.quoted_body).should match(/#{Regexp.escape(NKF.nkf("-jWx", @html))}/)
+        email.parts.last.quoted_body.should match(/#{Regexp.escape(NKF.nkf("-jWx", @plain))}/)
+      end
+
+      it "絵文字が変換されること" do
+        @html  += "&#xe68a;"
+        @plain += "&#xe676;"
+        MobileMailer.deliver_multi_message(@to, @subject, @html, @plain, @from)
+
+        emails = ActionMailer::Base.deliveries
+        emails.size.should == 1
+        email = emails.first
+
+        email.parts.size.should == 2
+        NKF.nkf("-mQwJ", email.parts.first.quoted_body).should match(/〓/)
+        NKF.nkf("-wJ", email.parts.last.quoted_body).should match(/〓/)
+      end
+    end
+
+    describe "j-phone の場合" do
+      before(:each) do
+        @to     = "jphone@jp-d.ne.jp"
+      end
+
+      it "漢字コードが変換されること" do
+        MobileMailer.deliver_multi_message(@to, @subject, @html, @plain, @from)
+
+        emails = ActionMailer::Base.deliveries
+        emails.size.should == 1
+        email = emails.first
+
+        email.parts.size.should == 2
+        NKF.nkf("-mQ", email.parts.first.quoted_body).should match(/#{Regexp.escape(NKF.nkf("-jWx", @html))}/)
+        email.parts.last.quoted_body.should match(/#{Regexp.escape(NKF.nkf("-jWx", @plain))}/)
+      end
+
+      it "絵文字が変換されること" do
+        @html  += "&#xe68a;"
+        @plain += "&#xe676;"
+        MobileMailer.deliver_multi_message(@to, @subject, @html, @plain, @from)
+
+        emails = ActionMailer::Base.deliveries
+        emails.size.should == 1
+        email = emails.first
+
+        email.parts.size.should == 2
+        NKF.nkf("-mQwJ", email.parts.first.quoted_body).should match(/〓/)
+        NKF.nkf("-wJ", email.parts.last.quoted_body).should match(/〓/)
+      end
+    end
   end
 end
 

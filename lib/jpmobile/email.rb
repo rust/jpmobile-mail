@@ -74,7 +74,7 @@ module Jpmobile
             when Jpmobile::Mobile::Docomo, Jpmobile::Mobile::Softbank
               part.charset = "shift_jis"
               part.transfer_encoding = "8bit"
-            when Jpmobile::Mobile::Au
+            when Jpmobile::Mobile::Au, Jpmobile::Mobile::Vodafone
               part.charset = "iso-2022-jp"
               part.transfer_encoding = "7bit"
             end
@@ -121,6 +121,8 @@ module Jpmobile
           when "text/html"
             jpm_body = convert_mail_body(part, mobile, mail_encode)
             case mobile
+            when Jpmobile::Mobile::Au, Jpmobile::Mobile::Vodafone, Jpmobile::Mobile::Jphone
+              part.body = [jpm_body].pack("M*")
             when Jpmobile::Mobile::Docomo, Jpmobile::Mobile::Softbank
               part.charset = mail_encode
               part.transfer_encoding = "Base64"
@@ -146,6 +148,8 @@ module Jpmobile
       end
 
       case mobile
+      when Jpmobile::Mobile::Au,Jpmobile::Mobile::Vodafone, Jpmobile::Mobile::Jphone
+        jpm_body = jpm_body.unpack("M*").first
       when Jpmobile::Mobile::Docomo, Jpmobile::Mobile::Softbank
       else
         jpm_body = jpm_body.unpack("M*").first
