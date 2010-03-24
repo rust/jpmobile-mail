@@ -578,6 +578,18 @@ describe MobileMailer, " mail address" do
 end
 
 describe MobileMailer, "receiving" do
+  describe "blank mail" do
+    it "softbank からの空メールがで受信できること" do
+      email = open(Rails.root + "spec/fixtures/mobile_mailer/softbank-blank.eml").read
+      lambda {
+        email = MobileMailer.receive(email)
+      }.should_not raise_exception
+
+      email.subject.should == ""
+      email.body.should == "\n"
+    end
+  end
+
   describe "docomo からのメールを受信するとき" do
     before(:each) do
       @email = open(Rails.root + "spec/fixtures/mobile_mailer/docomo-emoji.eml").read

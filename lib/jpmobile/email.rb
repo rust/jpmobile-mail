@@ -7,12 +7,14 @@ module Jpmobile
     SEND_NKF_OPTIONS = {
       "shift_jis"   => "-sWx --no-cp932",
       "iso-2022-jp" => "-jW",
+      ""            => "",
     }
     RECEIVE_NKF_OPTIONS = {
       "shift_jis"   => "-wSx --no-cp932",
       "iso-2022-jp" => "-wJ",
       "euc-jp"      => "-wE",
       "utf-8"       => "-wW",
+      ""            => "",
     }
     NKF_CONSTANTS = {
       "shift_jis"   => NKF::SJIS,
@@ -174,7 +176,7 @@ module Jpmobile
     # 受信した+mail+内の+subject+を変換する
     def self.prepare_receive_mail_subject(mail, mobile)
       header = mail.instance_variable_get(:@header)
-      subject = header["subject"].instance_variable_get(:@body)
+      subject = header["subject"].instance_variable_get(:@body) || ""
       if subject.match(SUBJECT_REGEXP)
         code    = $1
         subject = $2
@@ -188,6 +190,8 @@ module Jpmobile
                  "shift_jis"
                when NKF::UTF8
                  "utf-8"
+               else
+                 ""
                end
       end
 
