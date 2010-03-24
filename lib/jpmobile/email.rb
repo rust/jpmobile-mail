@@ -118,6 +118,7 @@ module Jpmobile
       if mail.parts.empty?
         # plain mail
         mail.body = convert_mail_body(mail, mobile, mail_encode)
+        mail.charset = mail_encode
       else
         # multipart mail
         mail.parts.map do |part|
@@ -137,6 +138,7 @@ module Jpmobile
               part.body = [jpm_body].pack("M*")
             end
           end
+          part.charset = mail_encode
 
           part
         end

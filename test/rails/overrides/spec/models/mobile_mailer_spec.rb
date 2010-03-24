@@ -32,6 +32,7 @@ describe MobileMailer do
       emails.size.should == 1
       email = emails.first
 
+      email.charset.should match(/^iso-2022-jp$/i)
       email.quoted_subject.should match(/#{Regexp.escape(NKF.nkf("-jWM", "題名"))}/i)
       email.quoted_body.should match(/#{Regexp.escape(NKF.nkf("-jW", "本文"))}/)
     end
@@ -70,6 +71,7 @@ describe MobileMailer do
       emails.size.should == 1
       email = emails.first
 
+      email.charset.should match(/^iso-2022-jp$/i)
       email.quoted_subject.should match(/#{Regexp.escape(NKF.nkf("-jWM", "題名"))}/i)
       email.quoted_body.should match(/#{Regexp.escape(NKF.nkf("-jW", "本文"))}/)
     end
@@ -98,6 +100,8 @@ describe MobileMailer do
       emails = ActionMailer::Base.deliveries
       emails.size.should == 1
       email = emails.first
+
+      email.charset.should match(/^shift_jis$/i)
 
       # subject
       NKF.nkf("-w", email.subject).should == @subject
@@ -139,7 +143,7 @@ describe MobileMailer do
       email.body.should match(/For docomo/)
 
       email.subject.should == @subject + "ｹﾞｰﾑ"
-      email.body.should match(Regexp.compile(Regexp.escape(NKF.nkf("-sWx", @text + "ﾌﾞｯｸ"), 's'), nil, 's'))
+      email.quoted_body.should match(Regexp.compile(Regexp.escape(NKF.nkf("-sWx", @text + "ﾌﾞｯｸ"), 's'), nil, 's'))
     end
   end
 
@@ -154,6 +158,8 @@ describe MobileMailer do
       emails = ActionMailer::Base.deliveries
       emails.size.should == 1
       email = emails.first
+
+      email.charset.should match(/^iso-2022-jp$/i)
 
       email.body.should match(/For au/)
       NKF.nkf('-Jw', email.quoted_body).should match(/#{@text}/)
@@ -189,8 +195,10 @@ describe MobileMailer do
       emails = ActionMailer::Base.deliveries
       emails.size.should == 1
       email = emails.first
-      email.body.should match(/For softbank/)
 
+      email.charset.should match(/^shift_jis$/i)
+
+      email.body.should match(/For softbank/)
       email.quoted_subject.match(@sjis_regexp)
       $1.unpack("m").first.should == NKF.nkf("-sW", @subject)
 
@@ -228,10 +236,11 @@ describe MobileMailer do
       emails = ActionMailer::Base.deliveries
       emails.size.should == 1
       email = emails.first
+
+      email.charset.should match(/^iso-2022-jp$/i)
+
       email.quoted_body.should match(/For vodafone/)
-
       NKF.nkf('-w', email.subject).should == @subject
-
       NKF.nkf('-w', email.quoted_body).should match(/#{@text}/)
     end
 
@@ -246,7 +255,7 @@ describe MobileMailer do
       email = emails.first
 
       email.body.should match(/For vodafone/)
-      NKF.nkf("-wJx", email.body).should match(/#{@text}〓/)
+      NKF.nkf("-wJx", email.quoted_body).should match(/#{@text}〓/)
 
       NKF.nkf("-wJx", email.subject) == @subject + "〓"
     end
@@ -277,7 +286,10 @@ describe MobileMailer do
         email = emails.first
 
         email.parts.size.should == 2
+
         NKF.nkf("-mQ", email.parts.first.quoted_body).should match(/#{Regexp.escape(NKF.nkf("-jWx", "万葉"))}/)
+
+        email.parts.last.charset.should match(/^iso-2022-jp$/i)
         email.parts.last.quoted_body.should match(/#{Regexp.escape(NKF.nkf("-jWx", @plain))}/)
       end
     end
@@ -295,7 +307,10 @@ describe MobileMailer do
         email = emails.first
 
         email.parts.size.should == 2
+
         email.parts.first.quoted_body.unpack("m").first.should match(Regexp.compile(Regexp.escape(NKF.nkf("-sWx", @html), 's'), nil, 's'))
+
+        email.parts.last.charset.should match(/^shift_jis$/i)
         email.parts.last.quoted_body.should match(/#{Regexp.escape(NKF.nkf("-sWx", @plain))}/)
       end
 
@@ -329,6 +344,8 @@ describe MobileMailer do
         email.parts.size.should == 2
 
         NKF.nkf("-mQ", email.parts.first.quoted_body).should match(/#{Regexp.escape(NKF.nkf("-jWx", @html))}/)
+
+        email.parts.last.charset.should match(/^iso-2022-jp$/i)
         email.parts.last.quoted_body.should match(/#{Regexp.escape(NKF.nkf("-jWx", @plain))}/)
       end
 
@@ -361,7 +378,10 @@ describe MobileMailer do
         email = emails.first
 
         email.parts.size.should == 2
+
         email.parts.first.quoted_body.unpack("m").first.should match(Regexp.compile(Regexp.escape(NKF.nkf("-sWx", @html), 's'), nil, 's'))
+
+        email.parts.last.charset.should match(/^shift_jis$/i)
         email.parts.last.quoted_body.should match(/#{Regexp.escape(NKF.nkf("-sWx", @plain))}/)
       end
 
@@ -393,7 +413,10 @@ describe MobileMailer do
         email = emails.first
 
         email.parts.size.should == 2
+
         NKF.nkf("-mQ", email.parts.first.quoted_body).should match(/#{Regexp.escape(NKF.nkf("-jWx", @html))}/)
+
+        email.parts.last.charset.should match(/^iso-2022-jp$/i)
         email.parts.last.quoted_body.should match(/#{Regexp.escape(NKF.nkf("-jWx", @plain))}/)
       end
 
@@ -425,7 +448,10 @@ describe MobileMailer do
         email = emails.first
 
         email.parts.size.should == 2
+
         NKF.nkf("-mQ", email.parts.first.quoted_body).should match(/#{Regexp.escape(NKF.nkf("-jWx", @html))}/)
+
+        email.parts.last.charset.should match(/^iso-2022-jp$/i)
         email.parts.last.quoted_body.should match(/#{Regexp.escape(NKF.nkf("-jWx", @plain))}/)
       end
 
