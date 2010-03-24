@@ -157,10 +157,10 @@ module Jpmobile
 
       case mobile
       when Jpmobile::Mobile::Au,Jpmobile::Mobile::Vodafone, Jpmobile::Mobile::Jphone
-        jpm_body = jpm_body.unpack("M*").first
+        jpm_body = transfer_decode(jpm_body, mail.transfer_encoding)
       when Jpmobile::Mobile::Docomo, Jpmobile::Mobile::Softbank
       else
-        jpm_body = jpm_body.unpack("M*").first
+        jpm_body = transfer_decode(jpm_body, mail.transfer_encoding)
       end
 
       unicodecr_to_email_encoding(jpm_body, mobile, mail_encode)

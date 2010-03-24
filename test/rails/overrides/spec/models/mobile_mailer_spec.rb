@@ -87,6 +87,18 @@ describe MobileMailer do
       email.subject.should == "題名"
       email.body.should match(/本文/)
     end
+
+    it "quoted-printable ではないときに勝手に変換されないこと" do
+      ActionMailer::Base.pc_convert = true
+      MobileMailer.deliver_message(@to, "題名",
+        "本文です\nhttp://test.rails/foo/bar/index?d=430d0d1cea109cdb384ec5554b890e3940f293c7&e=ZVG%0FE%16%5E%07%04%21P%5CZ%06%00%0D%1D%40L")
+
+      emails = ActionMailer::Base.deliveries
+      emails.size.should == 1
+      email = emails.first
+
+      email.body.should match(/ZVG%0FE%16%5E%07%04%21P%5CZ%06%00%0D%1D%40L/)
+    end
   end
 
   describe "docomo にメールを送るとき" do
@@ -145,6 +157,17 @@ describe MobileMailer do
       email.subject.should == @subject + "ｹﾞｰﾑ"
       email.quoted_body.should match(Regexp.compile(Regexp.escape(NKF.nkf("-sWx", @text + "ﾌﾞｯｸ"), 's'), nil, 's'))
     end
+
+    it "quoted-printable ではないときに勝手に変換されないこと" do
+      MobileMailer.deliver_message(@to, "題名",
+        "本文です\nhttp://test.rails/foo/bar/index?d=430d0d1cea109cdb384ec5554b890e3940f293c7&e=ZVG%0FE%16%5E%07%04%21P%5CZ%06%00%0D%1D%40L")
+
+      emails = ActionMailer::Base.deliveries
+      emails.size.should == 1
+      email = emails.first
+
+      email.body.should match(/ZVG%0FE%16%5E%07%04%21P%5CZ%06%00%0D%1D%40L/)
+    end
   end
 
   describe "au にメールを送るとき" do
@@ -181,6 +204,17 @@ describe MobileMailer do
       email.quoted_body.unpack("H*").first.should match(/7621/)
 
       email.quoted_subject.unpack("H*").first.should match(/765e/)
+    end
+
+    it "quoted-printable ではないときに勝手に変換されないこと" do
+      MobileMailer.deliver_message(@to, "題名",
+        "本文です\nhttp://test.rails/foo/bar/index?d=430d0d1cea109cdb384ec5554b890e3940f293c7&e=ZVG%0FE%16%5E%07%04%21P%5CZ%06%00%0D%1D%40L")
+
+      emails = ActionMailer::Base.deliveries
+      emails.size.should == 1
+      email = emails.first
+
+      email.body.should match(/ZVG%0FE%16%5E%07%04%21P%5CZ%06%00%0D%1D%40L/)
     end
   end
 
@@ -223,6 +257,17 @@ describe MobileMailer do
       email.body.should match(/For softbank/)
       email.quoted_body.unpack("H*").first.should match(/f76a/)
     end
+
+    it "quoted-printable ではないときに勝手に変換されないこと" do
+      MobileMailer.deliver_message(@to, "題名",
+        "本文です\nhttp://test.rails/foo/bar/index?d=430d0d1cea109cdb384ec5554b890e3940f293c7&e=ZVG%0FE%16%5E%07%04%21P%5CZ%06%00%0D%1D%40L")
+
+      emails = ActionMailer::Base.deliveries
+      emails.size.should == 1
+      email = emails.first
+
+      email.body.should match(/ZVG%0FE%16%5E%07%04%21P%5CZ%06%00%0D%1D%40L/)
+    end
   end
 
   describe "vodafone にメールを送るとき" do
@@ -258,6 +303,17 @@ describe MobileMailer do
       NKF.nkf("-wJx", email.quoted_body).should match(/#{@text}〓/)
 
       NKF.nkf("-wJx", email.subject) == @subject + "〓"
+    end
+
+    it "quoted-printable ではないときに勝手に変換されないこと" do
+      MobileMailer.deliver_message(@to, "題名",
+        "本文です\nhttp://test.rails/foo/bar/index?d=430d0d1cea109cdb384ec5554b890e3940f293c7&e=ZVG%0FE%16%5E%07%04%21P%5CZ%06%00%0D%1D%40L")
+
+      emails = ActionMailer::Base.deliveries
+      emails.size.should == 1
+      email = emails.first
+
+      email.body.should match(/ZVG%0FE%16%5E%07%04%21P%5CZ%06%00%0D%1D%40L/)
     end
   end
 
