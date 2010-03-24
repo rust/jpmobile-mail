@@ -1,17 +1,17 @@
 Return-Path: <au@ezweb.ne.jp>
-X-Original-To: 23071562@jpm-rails.org
-Delivered-To: num/at/jpm-rails.org@jpm-rails.org
+X-Original-To: info@jpm-rails.org
+Delivered-To: info@jpm-rails.org
 Received: from mx.jpm-rails.org (t.jpm-rails.org [192.168.123.123])
-	by serval.ra9.jp (Postfix) with ESMTP id 51FD11380CA
-	for <23071562@jpm-rails.org>; Thu, 18 Mar 2010 15:21:01 +0900 (JST)
+	by mx.jpm-rails.org (Postfix) with ESMTP id 51FD11380CA
+	for <info@jpm-rails.org>; Thu, 18 Mar 2010 15:21:01 +0900 (JST)
 Received: from ezweb.ne.jp (nx3oBP01-01.ezweb.ne.jp [59.135.39.205])
-	by tiger.ra9.jp (Postfix) with ESMTP id 26E581705B
-	for <23071562@jpm-rails.org>; Thu, 18 Mar 2010 15:21:01 +0900 (JST)
+	by jpm-rails.org (Postfix) with ESMTP id 26E581705B
+	for <info@jpm-rails.org>; Thu, 18 Mar 2010 15:21:01 +0900 (JST)
 Received: from nxev15mp09 (localhost [127.0.0.1])
 	by nxev15mp09.ezweb.ne.jp (EZweb Mail) with SMTP id 0739E4EDA80BC
-	for <23071562@jpm-rails.org>; Thu, 18 Mar 2010 15:21:01 +0900 (JST)
+	for <info@jpm-rails.org>; Thu, 18 Mar 2010 15:21:01 +0900 (JST)
 From: au@ezweb.ne.jp
-To: 23071562@jpm-rails.org
+To: info@jpm-rails.org
 Subject: =?iso-2022-jp?B?GyRCQmpMPhsoQngbJEJ1OhsoQg==?=
 Message-ID: <20100318152101007949000031f3@nxev15mp09.ezweb.ne.jp>
 Date: Thu, 18 Mar 2010 15:21:01 +0900

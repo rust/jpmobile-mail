@@ -614,6 +614,7 @@ describe MobileMailer, "receiving" do
 
   describe "multipart メールを受信するとき" do
     describe "docomo の場合" do
+      # NOTE: 要検証
       before(:each) do
         @email = open(Rails.root + "spec/fixtures/mobile_mailer/docomo-gmail-sjis.eml").read
       end
@@ -664,6 +665,7 @@ describe MobileMailer, "receiving" do
     end
 
     describe "softbank(sjis) の場合" do
+      # NOTE: 要検証
       before(:each) do
         @email = open(Rails.root + "spec/fixtures/mobile_mailer/softbank-gmail-sjis.eml").read
       end
@@ -687,6 +689,7 @@ describe MobileMailer, "receiving" do
     end
 
     describe "softbank(utf8) の場合" do
+      # NOTE: 要検証
       before(:each) do
         @email = open(Rails.root + "spec/fixtures/mobile_mailer/softbank-gmail-utf8.eml").read
       end
@@ -706,6 +709,34 @@ describe MobileMailer, "receiving" do
 
         email.parts.first.body.should match(/テストです&#xf223;/)
         email.parts.last.body.should match(/テストです&#xf223;/)
+      end
+    end
+
+    describe "添付ファイルがある場合" do
+      # NOTE: au のみテスト
+      before(:each) do
+        @email = open(Rails.root + "spec/fixtures/mobile_mailer/au-attached.eml").read
+      end
+
+      it "正常に受信できること" do
+        lambda {
+          MobileMailer.receive(@email)
+        }.should_not raise_exception
+      end
+
+      it "添付ファイルが壊れないこと" do
+        email = MobileMailer.receive(@email)
+
+        email.subject.should match(/&#xe481;/)
+
+        email.parts.size.should == 2
+
+        email.parts.first.body.should match(/カレンダーだ&#xe4f4;/)
+
+        email.has_attachments?.should be_true
+        email.attachments.size.should == 1
+        email.attachments.first.content_type.should == "image/jpeg"
+        email.attachments.first.read[6..9].should == "JFIF"
       end
     end
   end
