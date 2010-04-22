@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # =Willcom携帯電話
 # DDI-POCKETを含む。
 
@@ -23,6 +24,12 @@ module Jpmobile::Mobile
       pos.tokyo2wgs84!
       return @__position = pos
     end
+
+    # メールエンコーディング情報
+    def mail_encoding
+      ["iso-2022-jp", true] # shift_jis 変換
+    end
+
     # cookieに対応しているか？
     def supports_cookie?
       true
