@@ -27,7 +27,7 @@ module Jpmobile::Mobile
 
     # メールエンコーディング情報
     def mail_encoding
-      ["iso-2022-jp", true] # shift_jis 変換
+      ["iso-2022-jp", true] # iso-2022-jp 変換
     end
 
     # cookieに対応しているか？
