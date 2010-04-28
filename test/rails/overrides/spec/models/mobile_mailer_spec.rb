@@ -353,6 +353,42 @@ describe MobileMailer do
     end
   end
 
+  describe "emobile にメールを送るとき" do
+    before(:each) do
+      @to = "emobile@emnet.ne.jp"
+    end
+
+    it "subject が JIS になること" do
+      mail = MobileMailer.deliver_message(@to, @subject, @text)
+
+      emails = ActionMailer::Base.deliveries
+      emails.size.should == 1
+      email = emails.first
+
+      email.charset.should match(/^iso-2022-jp$/i)
+
+      email.quoted_body.should match(/For Emobile/)
+      NKF.nkf('-w', email.subject).should == @subject
+      NKF.nkf('-w', email.quoted_body).should match(/#{@text}/)
+    end
+
+    it "数値参照が〓に変換されること" do
+      emoji_subject = @subject + "&#xe676;"
+      emoji_text    = @text    + "&#xe68b;"
+
+      mail = MobileMailer.deliver_message(@to, emoji_subject, emoji_text)
+
+      emails = ActionMailer::Base.deliveries
+      emails.size.should == 1
+      email = emails.first
+
+      email.body.should match(/For Emobile/)
+      NKF.nkf("-wJx", email.quoted_body).should match(/#{@text}〓/)
+
+      NKF.nkf("-wJx", email.subject) == @subject + "〓"
+    end
+  end
+
   describe "multipart メールを送信するとき" do
     before(:each) do
       ActionMailer::Base.deliveries = []

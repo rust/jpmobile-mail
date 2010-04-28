@@ -25,11 +25,6 @@ module Jpmobile::Mobile
       return @__position = pos
     end
 
-    # メールエンコーディング情報
-    def mail_encoding
-      ["iso-2022-jp", true] # iso-2022-jp 変換
-    end
-
     # cookieに対応しているか？
     def supports_cookie?
       true

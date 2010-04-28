@@ -1,7 +1,9 @@
+# -*- coding: utf-8 -*-
 require 'test/unit'
 require 'rubygems'
 require 'action_controller'
 require 'rack'
+require 'action_mailer'
 
 RAILS_ENV = "test"
 require File.dirname(__FILE__)+'/../../lib/jpmobile'

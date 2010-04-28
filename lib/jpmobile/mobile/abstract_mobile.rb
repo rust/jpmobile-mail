@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 require 'ipaddr'
 
 module Jpmobile::Mobile
@@ -48,6 +49,11 @@ module Jpmobile::Mobile
     # クッキーをサポートしているか。
     def supports_cookie?
       return false
+    end
+
+    # メールエンコーディング情報
+    def mail_encoding
+      ["iso-2022-jp", true] # iso-2022-jp 変換
     end
 
     #XXX: lib/jpmobile.rbのautoloadで先に各キャリアの定数を定義しているから動くのです
