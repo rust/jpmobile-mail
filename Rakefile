@@ -8,19 +8,19 @@ require 'rake/rdoctask'
 require 'rake/contrib/rubyforgepublisher'
 require 'fileutils'
 include FileUtils
-require File.join(File.dirname(__FILE__), 'lib', 'jpmobile', 'version')
+require File.join(File.dirname(__FILE__), 'lib', 'jpmobile-mail', 'version')
 
 #
-AUTHOR = "dara"
-EMAIL = "dara@shidara.net"
-DESCRIPTION = "A Rails plugin for Japanese mobile-phones"
-RUBYFORGE_PROJECT = "jpmobile"
+AUTHOR = "Shin-ichiro OGAWA"
+EMAIL = "rust@stnard.jp"
+DESCRIPTION = "Japanese mobile mail plugin for jpmobile"
+RUBYFORGE_PROJECT = "jpmobile-mail"
 HOMEPATH = "http://#{RUBYFORGE_PROJECT}.rubyforge.org"
 BIN_FILES = %w(  )
 
-NAME = "jpmobile"
+NAME = "jpmobile-mail"
 REV = File.read(".svn/entries")[/committed-rev="(d+)"/, 1] rescue nil
-VERS = ENV['VERSION'] || (Jpmobile::VERSION::STRING + (REV ? ".#{REV}" : ""))
+VERS = ENV['VERSION'] || (Jpmobile::Mail::Version::STRING + (REV ? ".#{REV}" : ""))
 CLEAN.include ['**/.*.sw?', '*.gem', '.config']
 RDOC_OPTS = ['--quiet', '--title', "jpmobile documentation",
     "--opname", "index.html",

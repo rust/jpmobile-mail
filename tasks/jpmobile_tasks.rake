@@ -19,12 +19,6 @@ rescue LoadError
 end
 
 namespace :test do
-  desc "run jpmobile legacy tests"
-  Rake::TestTask.new(:legacy) do |t|
-    t.libs << 'lib'
-    t.pattern = 'test/legacy/**/*_test.rb'
-    t.verbose = true
-  end
   desc "Generate rails app and run jpmobile tests in the app"
   task :rails, [:versions] do |t, args|
     rails_versions = args.versions.split("/") rescue ["2.3.5"]
@@ -46,8 +40,8 @@ namespace :test do
     FileUtils.mkdir_p(rails_root)
     system "rails _#{rails_version}_ --force #{rails_root}"
 
-    # setup jpmobile
-    plugin_path = File.join(rails_root, 'vendor', 'plugins', 'jpmobile')
+    # setup jpmobile-mail
+    plugin_path = File.join(rails_root, 'vendor', 'plugins', 'jpmobile-mail')
     FileUtils.mkdir_p(plugin_path)
     FileList["*"].exclude("test").each do |file|
       FileUtils.cp_r(file, plugin_path)
@@ -88,6 +82,7 @@ END
     puts pwd
 
     cd rails_root
+    sh 'ruby script/plugin install git://github.com/darashi/jpmobile.git'
     sh "rake db:migrate"
     sh "rake spec"
 

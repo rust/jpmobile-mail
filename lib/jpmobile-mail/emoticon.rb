@@ -4,41 +4,29 @@ require 'nkf'
 module Jpmobile
   # 絵文字関連処理
   module Emoticon
-    %w( DOCOMO_SJIS_TO_UNICODE DOCOMO_UNICODE_TO_SJIS ).each do |const|
-      autoload const, 'jpmobile/emoticon/docomo'
-    end
-    autoload :AU_SJIS_TO_UNICODE,           'jpmobile/emoticon/au'
-    %w( SOFTBANK_UNICODE_TO_WEBCODE SOFTBANK_WEBCODE_TO_UNICODE ).each do |const|
-      autoload const, 'jpmobile/emoticon/softbank'
-    end
-    %w( CONVERSION_TABLE_TO_DOCOMO CONVERSION_TABLE_TO_AU CONVERSION_TABLE_TO_SOFTBANK ).each do |const|
-      autoload const, 'jpmobile/emoticon/conversion_table'
+    # for jpmobile-mail
+    %w(
+      AU_UNICODE_TO_EMAILJIS AU_SJIS_TO_EMAIL_JIS
+    ).each do |const|
+      autoload const, 'jpmobile-mail/emoticon/au'
     end
     %w(
-      SJIS_TO_UNICODE UNICODE_TO_SJIS
-      SJIS_REGEXP SOFTBANK_WEBCODE_REGEXP DOCOMO_SJIS_REGEXP AU_SJIS_REGEXP SOFTBANK_UNICODE_REGEXP
-      EMOTICON_UNICODES UTF8_REGEXP CONVERSION_TABLE_TO_PC SOFTBANK_SJIS_REGEXP AU_EMAILJIS_REGEXP
+      SOFTBANK_UNICODE_TO_SJIS SOFTBANK_SJIS_TO_UNICODE
     ).each do |const|
-      autoload const, 'jpmobile/emoticon/z_combine'
+      autoload const, 'jpmobile-mail/emoticon/softbank'
+    end
+    %w(
+      CONVERSION_TABLE_TO_PC SOFTBANK_SJIS_REGEXP AU_EMAILJIS_REGEXP
+    ).each do |const|
+      autoload const, 'jpmobile-mail/emoticon/z_combine'
+    end
+    # for jpmobile
+    %w(
+      AU_EMAILJIS_TO_UNICODE
+    ).each do |const|
+      autoload const, 'jpmobile/emoticon/au'
     end
 
-    # +str+ のなかでDoCoMo絵文字をUnicode数値文字参照に置換した文字列を返す。
-    def self.external_to_unicodecr_docomo(str)
-      str.gsub(DOCOMO_SJIS_REGEXP) do |match|
-        sjis = match.unpack('n').first
-        unicode = DOCOMO_SJIS_TO_UNICODE[sjis]
-        unicode ? ("&#x%04x;"%unicode) : match
-      end
-    end
-
-    # +str+ のなかでau絵文字をUnicode数値文字参照に置換した文字列を返す。
-    def self.external_to_unicodecr_au(str)
-      str.gsub(AU_SJIS_REGEXP) do |match|
-        sjis = match.unpack('n').first
-        unicode = AU_SJIS_TO_UNICODE[sjis]
-        unicode ? ("&#x%04x;"%unicode) : match
-      end
-    end
     # +str+ のなかでau絵文字をUnicode数値文字参照に置換した文字列を返す。(メール専用)
     def self.external_to_unicodecr_au_mail(str)
       str.gsub(AU_EMAILJIS_REGEXP) do |match|
@@ -48,38 +36,12 @@ module Jpmobile
       end
     end
 
-    # +str+のなかでUTF8のSoftBank絵文字を(+0x1000だけシフトして)Unicode数値文字参照に変換した文字列を返す。
-    def self.external_to_unicodecr_softbank(str)
-      # SoftBank Unicode
-      str.gsub(SOFTBANK_UNICODE_REGEXP) do |match|
-        unicode = match.unpack('U').first
-        "&#x%04x;" % (unicode+0x1000)
-      end
-    end
+    # SoftBank Shift_JIS
     def self.external_to_unicodecr_softbank_sjis(str)
-      # SoftBank Shift_JIS
       str.gsub(SOFTBANK_SJIS_REGEXP) do |match|
         sjis = match.unpack('n').first
         unicode = SOFTBANK_SJIS_TO_UNICODE[sjis]
         "&#x%04x;" % (unicode+0x1000)
-      end
-    end
-    def self.external_to_unicodecr_vodafone(str)
-      external_to_unicodecr_softbank(str)
-    end
-    # +str+のなかでWebcodeのSoftBank絵文字を(+0x1000だけシフトして)Unicode数値文字参照に変換した文字列を返す。
-    def self.external_to_unicodecr_jphone(str)
-      # SoftBank Webcode
-      s = str.clone
-      # 連続したエスケープコードが省略されている場合は切りはなす。
-      s.gsub!(/\x1b\x24(.)(.+?)\x0f/) do |match|
-        a = $1
-        $2.split(//).map{|x| "\x1b\x24#{a}#{x}\x0f"}.join('')
-      end
-      # Webcodeを変換
-      s.gsub(SOFTBANK_WEBCODE_REGEXP) do |match|
-        unicode = SOFTBANK_WEBCODE_TO_UNICODE[match[2,2]] + 0x1000
-        unicode ? ("&#x%04x;"%unicode) : match
       end
     end
 
@@ -134,24 +96,6 @@ module Jpmobile
           # 変換先が定義されていない。
           match
         end
-      end
-    end
-
-    # +str+ のなかでUnicode数値文字参照で表記された絵文字をUTF-8に置換する。
-    def self.unicodecr_to_utf8(str)
-      str.gsub(/&#x([0-9a-f]{4});/i) do |match|
-        unicode = $1.scanf("%x").first
-        if UNICODE_TO_SJIS[unicode] || SOFTBANK_UNICODE_TO_WEBCODE[unicode-0x1000]
-          [unicode].pack('U')
-        else
-          match
-        end
-      end
-    end
-    # +str+ のなかでUTF-8で表記された絵文字をUnicode数値文字参照に置換する。
-    def self.utf8_to_unicodecr(str)
-      str.gsub(UTF8_REGEXP) do |match|
-        "&#x%04x;" % match.unpack('U').first
       end
     end
 
