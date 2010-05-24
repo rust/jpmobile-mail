@@ -21,7 +21,7 @@ end
 namespace :test do
   desc "Generate rails app and run jpmobile tests in the app"
   task :rails, [:versions] do |t, args|
-    rails_versions = args.versions.split("/") rescue ["2.3.5"]
+    rails_versions = args.versions.split("/") rescue ["2.3.6"]
     rails_versions.each do |rails_version|
       Rake::Task["test:prepare"].invoke(rails_version)
       Rake::Task["test:spec"].invoke(rails_version)
@@ -30,7 +30,7 @@ namespace :test do
 
   desc "Generate rails app"
   task :prepare, [:rails_version] do |t, args|
-    rails_version = args.rails_version || "2.3.5"
+    rails_version = args.rails_version || "2.3.6"
     rails_root    = "test/rails/rails_root"
     relative_root = "../../../"
 

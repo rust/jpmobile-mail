@@ -33,7 +33,7 @@ docomo 携帯電話からアクセスした場合、
 
 == 注意事項
 * jpmobile 本体のインストールが必要となります。
-* Rails 2.3.5 のみ対応です。
+* Rails 2.3.5, 2.3.6 のみ動作確認済み。
 * Rails 3.0 が出る頃には別物になっている可能性があります。
 * 一部jpmobileのコードを書き換えています。
 
@@ -52,7 +52,7 @@ docomo 携帯電話からアクセスした場合、
 
 == 作者
 
-Copyright 2010 (c) SHin-ichiro OGAWA, under MIT License.
+Copyright 2010 (c) Shin-ichiro OGAWA, under MIT License.
 
 Shin-ichiro OGAWA <rust@stnard.jp>
 
